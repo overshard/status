@@ -9,7 +9,7 @@
     "manage:createsuperuser": "pipenv run python manage.py createsuperuser",
     "webpack:development": "nodemon --watch webpack.config.js --exec 'webpack --config webpack.config.js --mode development --watch --devtool source-map'",
     "webpack:production": "webpack --config webpack.config.js --mode production",
-    "pull:db": "scp `git config --get remote.origin.url | cut -d ':' -f 1`:/srv/data/blog/db/db.sqlite3 .",
+    "pull:db": "scp `git config --get remote.origin.url | cut -d ':' -f 1`:/srv/data/status/db/db.sqlite3 .",
     "pull:media": "scp -r `git config --get remote.origin.url | cut -d ':' -f 1`:/srv/data/status/media .",
     "format": "concurrently --raw yarn:format:python",
     "format:python": "pipenv run black --exclude '/(\\.venv|\\.git|migrations|node_modules)/' ."
