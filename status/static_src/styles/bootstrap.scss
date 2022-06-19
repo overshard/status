@@ -1,0 +1,39 @@
+@import "~bootstrap/scss/bootstrap";
+
+.bg-black {
+  background-color: $black !important;
+}
+
+.bg-purple-900 {
+  background-color: $purple-900 !important;
+}
+
+.bg-purple-800 {
+  background-color: $purple-800 !important;
+}
+
+.breadcrumb {
+  display: block;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+
+  .breadcrumb-item {
+    font-size: 0.9em;
+    white-space: nowrap;
+    display: inline-block;
+
+    a {
+      color: $gray-500;
+      text-decoration: none;
+      transition: color .15s ease-in-out;
+
+      &:hover {
+        color: $gray-200;
+      }
+    }
+
+    &.active {
+      color: $white;
+    }
+  }
+}

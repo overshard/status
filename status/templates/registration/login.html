@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% load i18n static %}
+
+
+{% block breadcrumbs %}
+<nav style="--bs-breadcrumb-divider: url(&#34;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='%236c757d'/%3E%3C/svg%3E&#34;);" aria-label="breadcrumb">
+  <ol class="breadcrumb mb-0">
+    <li class="breadcrumb-item"><a href="/">Home</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+  </ol>
+</nav>
+{% endblock %}
+
+
+{% block nav %}{% endblock %}
+
+
+{% block breadcrumb_wrapper %}{% endblock %}
+
+
+{% block main %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12 col-md-8 col-lg-6 vh-100 d-flex align-items-center">
+      <div class="container my-5">
+        <div class="row">
+          <div class="col-lg-6 offset-lg-3 col-sm-8 offset-sm-2 col-xs-12 offset-xs-0">
+            <h1>{{ title }}</h1>
+            <p>You have to be invited to use this service, please contact the site
+              owner to get a unique username and password.</p>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-lg-6 offset-lg-3 col-sm-8 offset-sm-2 col-xs-12 offset-xs-0">
+            {% if form.errors and not form.non_field_errors %}
+              <p class="errornote">
+                {% if form.errors.items|length == 1 %}
+                  {% translate "Please correct the error below." %}
+                {% else %}
+                  {% translate "Please correct the errors below." %}
+                {% endif %}
+              </p>
+            {% endif %}
+
+            {% if form.non_field_errors %}
+              {% for error in form.non_field_errors %}
+                <p class="errornote">
+                  {{ error }}
+                </p>
+              {% endfor %}
+            {% endif %}
+
+            {% if user.is_authenticated %}
+            <p class="errornote">
+            {% blocktranslate trimmed %}
+              You are authenticated as {{ username }}, but are not authorized to
+              access this page. Would you like to login to a different account?
+            {% endblocktranslate %}
+            </p>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-lg-6 offset-lg-3 col-sm-8 offset-sm-2 col-xs-12 offset-xs-0">
+            <form method="POST" action="{{ app_path }}">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ next }}" />
+              <div class="form-floating mb-3">
+                <input type="text" class="form-control {% if form.username.errors %}is-invalid{% endif %}" name="username" id="id_username" placeholder="Username" value="{{ form.username.value|default:'' }}" required autofocus />
+                <label for="id_username" class="form-label">Username</label>
+              </div>
+              <div class="form-floating mb-3">
+                <input type="password" class="form-control {% if form.password.errors %}is-invalid{% endif %}" name="password" id="id_password" placeholder="Password" required />
+                <label for="id_password" class="form-label">Password</label>
+              </div>
+              <div class="row">
+                <div class="col">
+                  <button type="submit" class="btn  btn-primary">
+                    Login
+                  </button>
+                  <a href="{% url 'password_reset' %}" class="btn btn-link float-end">
+                    Forgot password?
+                  </a>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 col-lg-6 d-none d-md-block vh-100 login-hero" style="--background-image: url({% static 'images/home-hero.webp' %});"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block footer %}{% endblock %}

@@ -1,0 +1,46 @@
+# Caddyfile for status
+#
+# I like to use Caddy Server for simple reverse proxies since it has built in
+# automatic HTTPS support. It is probably worth serving static files with
+# Caddy too but I've honestly been too lazy to implement that. I just use
+# whitenoise on Django for that.
+
+(common) {
+  header /* {
+    X-XSS-Protection "1; mode=block"
+    X-Content-Type-Options nosniff
+    -Server
+  }
+
+  header /media/* {
+    Cache-Control "public, max-age=315360000"
+  }
+
+  encode zstd gzip
+}
+
+status.example.com {
+  handle /collect/ {
+    @options {
+      method OPTIONS
+    }
+
+    respond @options 204
+
+    header Access-Control-Allow-Origin *
+    header Access-Control-Allow-Methods *
+    header Access-Control-Allow-Headers *
+    header Access-Control-Max-Age 31536000
+  }
+
+  handle /media/* {
+    uri strip_prefix /media
+    file_server {
+      root /srv/data/status/media
+    }
+  }
+
+  reverse_proxy localhost:8000
+
+  import common
+}

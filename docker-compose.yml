@@ -1,0 +1,21 @@
+# A docker compose file to run an status server
+#
+# We need to make sure the db.sqlite3 database is stored on the host machine
+# to maintain the data across rebuilds.
+
+version: "3"
+
+services:
+  web:
+    container_name: status
+    build: .
+    env_file: .env
+    volumes:
+      - /srv/data/status/:/data/
+    ports:
+      - "${PORT}:${PORT}"
+    command: >
+      sh -c "python3 manage.py scheduler &
+             gunicorn blog.asgi:application --worker-class uvicorn.workers.UvicornWorker
+             --workers 4 --bind :${PORT} --log-file - --access-logfile - --error-logfile -"
+    restart: unless-stopped

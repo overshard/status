@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block extra_js %}
+{{ status_response_times_graph|json_script:"chart-status-response-times-data" }}
+{{ status_codes_graph|json_script:"chart-status-codes-data" }}
+<script src="{% static 'properties.js' %}"></script>
+{% endblock %}
+
+
+{% block breadcrumbs %}
+<nav style="--bs-breadcrumb-divider: url(&#34;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='%236c757d'/%3E%3C/svg%3E&#34;);" aria-label="breadcrumb">
+  <ol class="breadcrumb mb-0">
+    <li class="breadcrumb-item"><a href="/">Home</a></li>
+    <li class="breadcrumb-item"><a href="/properties/">Properties</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+  </ol>
+</nav>
+{% endblock %}
+
+
+{% block main %}
+<div class="bg-light py-2">
+  <div class="container">
+    <div class="row">
+      <div class="col">
+        <div class="d-flex align-items-center">
+          <h1 class="me-3 display-5">{{ title }}</h1>
+        </div>
+        <div class="d-lg-flex my-lg-0 d-print-none">
+          {% if user.is_authenticated %}
+          <form id="is-public-form" method="POST">
+            {% csrf_token %}
+            <div class="form-check form-switch my-1">
+              <input class="form-check-input" type="checkbox" role="switch" name="is_public" id="is-public-switch" {% if property.is_public %}checked{% endif %}>
+              <label class="form-check-label" for="{{ custom_event.event|slugify }}-switch">
+                <span class="badge bg-dark rounded-pill" data-bs-placement="bottom" data-bs-toggle="tooltip" title="Anyone with the URL will have access to this property, you can disable at anytime.">?</span>
+                Public Property
+              </label>
+            </div>
+          </form>
+          {% endif %}
+          <a href="{% url 'property' property.id %}?report" target="_blank" class="btn btn-sm btn-primary ms-0 ms-lg-3 my-1">
+            Generate report
+          </a>
+          {% if not property.is_protected and user.is_authenticated %}
+          <button type="button" class="btn btn-sm btn-outline-danger ms-1 ms-lg-3 my-1" data-bs-toggle="modal" data-bs-target="#delete-modal-{{ property.id }}" onclick="collectorQueue.push({event: 'delete_property'})">
+            Delete
+          </button>
+          <div class="modal fade" id="delete-modal-{{ property.id }}" tabindex="-1" aria-labelledby="delete-modal-{{ property.id }}-label" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="delete-modal-{{ property.id }}-label">Confirm property delete</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  Are you sure you want to delete <strong>{{ property.name }}</strong>?
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">I've changed my mind</button>
+                  <a href="{% url 'property_delete' property.id %}" class="btn btn-danger">Confirm</a>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container my-4">
+  <div class="row text-center">
+    <div class="col">
+      <div class="bg-light mb-4 p-2 rounded">
+        <canvas id="chart-response-times"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-12 col-md-8">
+      <ul class="list-group">
+        <li class="list-group-item">
+          <strong>Security</strong>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+          <span>Use HTTPS</span>
+          <span class="badge {% if property.is_https %}bg-success{% else %}bg-danger{% endif %}">{{ property.is_https }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+          <span>Set MIME types</span>
+          <span class="badge {% if property.has_mime_type %}bg-success{% else %}bg-danger{% endif %}">{{ property.has_mime_type }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+          <span>Use content sniffing protection</span>
+          <span class="badge {% if property.has_content_sniffing_protection %}bg-success{% else %}bg-danger{% endif %}">{{ property.has_content_sniffing_protection }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+          <span>Use clickjack protection</span>
+          <span class="badge {% if property.has_clickjack_protection %}bg-success{% else %}bg-danger{% endif %}">{{ property.has_clickjack_protection }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+          <span>Use XSS protection</span>
+          <span class="badge {% if property.has_xss_protection %}bg-success{% else %}bg-danger{% endif %}">{{ property.has_xss_protection }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+          <span>Hide server version data</span>
+          <span class="badge {% if property.hides_server_version %}bg-success{% else %}bg-danger{% endif %}">{{ property.hides_server_version }}</span>
+        </li>
+      </ul>
+    </div>
+    <div class="col-12 col-md-4">
+      <div class="bg-light mb-4 p-2 rounded">
+        <canvas id="chart-status-codes"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

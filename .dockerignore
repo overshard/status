@@ -1,0 +1,15 @@
+.env
+.eslint
+.flake8
+.git
+.gitignore
+*.md
+*.sample
+db.sqlite3
+docker-compose.yml
+Dockerfile
+LICENSE.md
+node_modules
+README.md
+samplefiles
+static

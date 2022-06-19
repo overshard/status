@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+
+{% block extra_head %}
+{% include "includes/social.html" %}
+{% endblock %}
+
+
+{% block breadcrumbs %}
+<nav style="--bs-breadcrumb-divider: url(&#34;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='%236c757d'/%3E%3C/svg%3E&#34;);" aria-label="breadcrumb">
+  <ol class="breadcrumb mb-0">
+    <li class="breadcrumb-item"><a href="/">Home</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+  </ol>
+</nav>
+{% endblock %}
+
+
+{% block main %}
+<div class="container my-5">
+  <div class="row">
+    <div class="col-lg-6 offset-lg-3 col-sm-8 offset-sm-2 col-xs-12 offset-xs-0">
+      <h1>{{ title }}</h1>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-lg-6 offset-lg-3 col-sm-8 offset-sm-2 col-xs-12 offset-xs-0">
+      <p>If you have any questions or comments feel free to contact me at
+        <a href="mailto:isaac@bythewood.me">isaac@bythewood.me</a>. I don't
+        promise I'll respond and if it's a support question I almost definitely
+        won't respond. I like chatting with other devs though so if you have a
+        serious question or suggestion please do let me know!</p>
+      <h2>Sites</h2>
+      <ul>
+        <li>
+          <a href="https://isaacbythewood.com/">Home</a>
+        </li>
+        <li>
+          <a href="https://blog.bythewood.me/">Blog</a>
+        </li>
+        <li>
+          <a href="https://analytics.bythewood.me/">Analytics</a>
+        </li>
+      </ul>
+      <h2>Projects</h2>
+      <ul>
+        <li>
+          <a href="https://github.com/overshard/blog">Blog</a>
+        </li>
+        <li>
+          <a href="https://github.com/overshard/analytics">Analytics</a>
+        </li>
+        <li>
+          <a href="https://github.com/overshard/status">Status</a>
+        </li>
+        <li>
+          <a href="https://github.com/overshard/timelite">Timelite</a>
+        </li>
+      </ul>
+
+      <div class="d-flex justify-content-center mt-3">
+        <a href="https://isaacbythewood.com/" target="_blank" class="logo shadow ms-4" aria-label="Isaac Bythewood"></a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+
+{% block extra_head %}
+{% include "includes/social.html" %}
+{% endblock %}
+
+
+{% block breadcrumbs %}
+<nav style="--bs-breadcrumb-divider: url(&#34;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='%236c757d'/%3E%3C/svg%3E&#34;);" aria-label="breadcrumb">
+  <ol class="breadcrumb mb-0">
+    <li class="breadcrumb-item"><a href="/">Home</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+  </ol>
+</nav>
+{% endblock %}
+
+
+{% block main %}
+<div class="container my-5">
+  <div class="row">
+    <div class="col-lg-6 offset-lg-3 col-sm-8 offset-sm-2 col-xs-12 offset-xs-0">
+      <h1>{{ title }}</h1>
+      <p>New and upcoming features and changes to status.</p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-lg-6 offset-lg-3 col-sm-8 offset-sm-2 col-xs-12 offset-xs-0">
+      <h2>New</h2>
+      <ul>
+        <li><span class="badge bg-success">2022-06-19</span> Create status project</li>
+      </ul>
+      <h2>Upcoming</h2>
+      <ul>
+        <li><span class="badge bg-info">ETA Unknown</span> Valid SSL certificate monitoring</li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}
