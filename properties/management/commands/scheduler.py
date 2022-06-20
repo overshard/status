@@ -16,9 +16,13 @@ class Command(BaseCommand):
             response_time = response.elapsed.total_seconds() * 1000
             status_code = response.status_code
             headers = response.headers
+        except (requests.exceptions.SSLError):
+            response_time = 5000
+            status_code = 526
+            headers = {}
         except (requests.exceptions.RequestException, requests.exceptions.Timeout):
             response_time = 5000
-            status_code = 0
+            status_code = 408
             headers = {}
         Check.objects.create(
             property=property,

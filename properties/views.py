@@ -29,10 +29,14 @@ def properties(request):
     else:
         form = PropertyForm()
 
+    properties = request.user.properties.order_by('-url')
+    properties = sorted(properties, key=lambda x: x.current_status)
+    properties = reversed(properties)
+
     return render(
         request,
         "properties/properties.html",
-        {"form": form, "title": "Properties", "description": "Manage your properties."},
+        {"form": form, "title": "Properties", "description": "Manage your properties.", "properties": properties},
     )
 
 

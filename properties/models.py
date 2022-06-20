@@ -115,6 +115,10 @@ class Property(models.Model):
             return {}
 
     @property
+    def invalid_cert(self):
+        return self.statuses.latest("created_at").status_code == 526
+
+    @property
     def is_https(self):
         return self.url.startswith("https://")
 
@@ -146,6 +150,22 @@ class Property(models.Model):
             and self.latest_headers.get("powered-by", None) is None
             and self.latest_headers.get("x-powered-by", None) is None
         ):
+            return True
+        return False
+
+    @property
+    def has_security_issue(self):
+        if not self.is_https:
+            return True
+        if not self.has_mime_type:
+            return True
+        if not self.has_content_sniffing_protection:
+            return True
+        if not self.has_xss_protection:
+            return True
+        if not self.has_clickjack_protection:
+            return True
+        if not self.hides_server_version:
             return True
         return False
 
