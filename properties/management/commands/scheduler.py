@@ -11,7 +11,8 @@ from ...models import Check, Property
 class Command(BaseCommand):
     def run_check(self, property):
         try:
-            response = requests.get(property.url, timeout=5)
+            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 Status/1.0.0"}
+            response = requests.get(property.url, timeout=5, headers=headers)
             response_time = response.elapsed.total_seconds() * 1000
             status_code = response.status_code
             headers = response.headers
