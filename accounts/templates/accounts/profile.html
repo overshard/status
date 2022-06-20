@@ -31,6 +31,10 @@
           <input type="text" class="form-control {% if form.email.errors %}is-invalid{% endif %}" name="email" id="id_email" placeholder="Email" value="{{ form.email.value }}" />
           <label for="id_email" class="form-label">Email</label>
         </div>
+        <div class="form-floating mb-3">
+          <input type="text" class="form-control {% if form.discord_webhook_url.errors %}is-invalid{% endif %}" name="discord_webhook_url" id="id_discord_webhook_url" placeholder="Discord webhook url" value="{{ form.discord_webhook_url.value }}" />
+          <label for="id_discord_webhook_url" class="form-label">Discord webhook url</label>
+        </div>
         <div class="row">
           <div class="col">
             <button type="submit" class="btn btn-primary">

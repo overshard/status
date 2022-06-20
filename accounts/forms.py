@@ -6,4 +6,4 @@ from .models import User
 class UserForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ('username', 'email',)
+        fields = ('username', 'email', 'discord_webhook_url')
