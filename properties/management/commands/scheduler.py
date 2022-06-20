@@ -28,15 +28,13 @@ class Command(BaseCommand):
         )
         if property.user.discord_webhook_url and status_code != 200:
             payload = {
-                "username": "Status Check",
-                "content": f"{property.url} is down!",
+                "username": "Status",
                 "embeds": [
                     {
-                        "title": "Status Check",
+                        "title": "Status",
                         "description": f"{property.url} is down!",
                         "color": 16711680,
                         "timestamp": timezone.now().isoformat(),
-                        "footer": {"text": "Status Check"},
                     }
                 ],
             }
