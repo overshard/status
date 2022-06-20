@@ -97,7 +97,7 @@ class Property(models.Model):
     def avg_response_time(self):
         try:
             return int(
-                self.statuses.aggregate(models.Avg("response_time"))[
+                self.statuses.all()[:31].aggregate(models.Avg("response_time"))[
                     "response_time__avg"
                 ]
             )
