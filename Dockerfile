@@ -10,7 +10,7 @@
 FROM alpine:3.16
 
 RUN apk add --update --no-cache \
-      build-base postgresql-dev \
+      build-base python3-dev postgresql-dev \
       python3 py3-pip \
       nodejs yarn \
       chromium libstdc++ nss harfbuzz freetype font-noto font-noto-extra font-noto-emoji && \
