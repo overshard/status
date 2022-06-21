@@ -6,6 +6,13 @@
 version: "3"
 
 services:
+  db:
+    image: postgres:14.3-alpine
+    container_name: status_db
+    env_file: .env
+    volumes:
+      - /srv/data/status/db/:/var/lib/postgresql/data/
+    restart: unless-stopped
   web:
     container_name: status_web
     build: .
@@ -20,15 +27,4 @@ services:
              --workers 4 --bind :${PORT} --log-file - --access-logfile - --error-logfile -"
     depends_on:
       - db
-    restart: unless-stopped
-  db:
-    image: postgres:14.3-alpine
-    container_name: status_db
-    env_file: .env
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
-    volumes:
-      - /srv/data/status/db/:/var/lib/postgresql/data/
     restart: unless-stopped
