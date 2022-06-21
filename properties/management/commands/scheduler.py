@@ -9,10 +9,12 @@ from ...models import Check, Property
 
 
 class Command(BaseCommand):
-    def run_check(self, property_id):
+    def run_check(self, property_id, discord_webhook_url=None):
         property = Property.objects.get(id=property_id)
         try:
-            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 Status/1.0.0"}
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 Status/1.0.0"
+            }
             response = requests.get(property.url, timeout=5, headers=headers)
             response_time = response.elapsed.total_seconds() * 1000
             status_code = response.status_code
@@ -31,7 +33,7 @@ class Command(BaseCommand):
             response_time=response_time,
             headers=dict(headers),
         )
-        if property.user.discord_webhook_url and status_code != 200:
+        if discord_webhook_url and status_code != 200:
             payload = {
                 "username": "Status",
                 "embeds": [
@@ -43,7 +45,7 @@ class Command(BaseCommand):
                     }
                 ],
             }
-            requests.post(property.user.discord_webhook_url, json=payload)
+            requests.post(discord_webhook_url, json=payload)
 
         self.stdout.write("[Scheduler] Checked {}".format(property.url))
 
@@ -68,7 +70,10 @@ class Command(BaseCommand):
                     "[Scheduler] Running {} checks...".format(len(properties))
                 )
                 processes = [
-                    Process(target=self.run_check, args=(p.id,)) for p in properties
+                    Process(
+                        target=self.run_check, args=(p.id, p.user.discord_webhook_url)
+                    )
+                    for p in properties
                 ]
                 for p in processes:
                     p.daemon = True
