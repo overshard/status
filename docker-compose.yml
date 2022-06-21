@@ -19,6 +19,8 @@ services:
              gunicorn status.asgi:application --worker-class uvicorn.workers.UvicornWorker
              --workers 4 --bind :${PORT} --log-file - --access-logfile - --error-logfile -"
     restart: unless-stopped
+    depends_on:
+      - db
   db:
     image: postgres:14.3-alpine
     container_name: status_db
