@@ -56,6 +56,9 @@ class Command(BaseCommand):
             properties = [p for p in Property.objects.all() if p.should_check()]
             for property in properties:
                 threading.Thread(target=self.run_check, args=(property,)).start()
+                property.next_run_at = property.get_next_run_at()
+                property.last_run_at = timezone.now()
+                property.save()
 
             self.stdout.write("[Scheduler] Sleeping scheduler for 30 seconds...")
             try:
