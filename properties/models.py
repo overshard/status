@@ -94,7 +94,7 @@ class Property(models.Model):
         try:
             return self.statuses.latest("created_at").status_code
         except Check.DoesNotExist:
-            return None
+            return 200
 
     @property
     def avg_response_time(self):
