@@ -5,13 +5,18 @@ import requests
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from ...models import Check, Property
+from properties.models import Check, Property
+from accounts.models import User
 
 
 class Command(BaseCommand):
-    def run_check(self, property):
+    def run_check(self, property_id, property_user_id):
+        property = Property.objects.get(id=property_id)
+        user = User.objects.get(id=property_user_id)
         try:
-            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 Status/1.0.0"}
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 Status/1.0.0"
+            }
             response = requests.get(property.url, timeout=5, headers=headers)
             response_time = response.elapsed.total_seconds() * 1000
             status_code = response.status_code
@@ -30,7 +35,7 @@ class Command(BaseCommand):
             response_time=response_time,
             headers=dict(headers),
         )
-        if property.user.discord_webhook_url and status_code != 200:
+        if user.discord_webhook_url and status_code != 200:
             payload = {
                 "username": "Status",
                 "embeds": [
@@ -67,7 +72,8 @@ class Command(BaseCommand):
                     "[Scheduler] Running {} checks...".format(len(properties))
                 )
                 processes = [
-                    Process(target=self.run_check, args=(p,)) for p in properties
+                    Process(target=self.run_check, args=(p.id, p.user.id))
+                    for p in properties
                 ]
                 for p in processes:
                     p.daemon = True
