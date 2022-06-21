@@ -1,5 +1,5 @@
 import time
-from multiprocessing import Process
+import threading
 
 import requests
 from django.core.management.base import BaseCommand
@@ -10,9 +10,7 @@ from accounts.models import User
 
 
 class Command(BaseCommand):
-    def run_check(self, property_id, property_user_id):
-        property = Property.objects.get(id=property_id)
-        user = User.objects.get(id=property_user_id)
+    def run_check(self, property):
         try:
             headers = {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 Status/1.0.0"
@@ -35,7 +33,7 @@ class Command(BaseCommand):
             response_time=response_time,
             headers=dict(headers),
         )
-        if user.discord_webhook_url and status_code != 200:
+        if property.user.discord_webhook_url and status_code != 200:
             payload = {
                 "username": "Status",
                 "embeds": [
@@ -55,32 +53,9 @@ class Command(BaseCommand):
         self.stdout.write("[Scheduler] Starting scheduler...")
 
         while True:
-            """
-            Get all properties and find which ones we "should_check". From there
-            use multiprocessing to run multiple checks at the same time.
-            """
             properties = [p for p in Property.objects.all() if p.should_check()]
-            properties = []
-            for p in Property.objects.all():
-                if p.should_check():
-                    properties.append(p)
-                    p.last_run_at = timezone.now()
-                    p.next_run_at = p.get_next_run_at()
-                    p.save()
-            if properties:
-                self.stdout.write(
-                    "[Scheduler] Running {} checks...".format(len(properties))
-                )
-                processes = [
-                    Process(target=self.run_check, args=(p.id, p.user.id))
-                    for p in properties
-                ]
-                for p in processes:
-                    p.daemon = True
-                    try:
-                        p.start()
-                    except StopIteration:
-                        pass
+            for property in properties:
+                threading.Thread(target=self.run_check, args=(property,)).start()
 
             self.stdout.write("[Scheduler] Sleeping scheduler for 30 seconds...")
             try:
