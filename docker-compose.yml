@@ -7,7 +7,7 @@ version: "3"
 
 services:
   db:
-    image: postgres:14.3-alpine
+    image: postgres:alpine
     container_name: status_db
     env_file: .env
     volumes:
@@ -22,9 +22,20 @@ services:
     ports:
       - "${PORT}:${PORT}"
     command: >
-      sh -c "python3 manage.py scheduler &
-             gunicorn status.asgi:application --worker-class uvicorn.workers.UvicornWorker
-             --workers 4 --bind :${PORT} --log-file - --access-logfile - --error-logfile -"
+      gunicorn status.asgi:application --worker-class uvicorn.workers.UvicornWorker
+        --workers 4 --bind :${PORT} --log-file - --access-logfile -
+        --error-logfile -
+    depends_on:
+      - db
+    restart: unless-stopped
+  worker:
+    container_name: status_worker
+    build: .
+    env_file: .env
+    volumes:
+      - /srv/data/status/media/:/data/media/
+    command: >
+      python3 manage.py scheduler
     depends_on:
       - db
     restart: unless-stopped
