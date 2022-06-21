@@ -9,7 +9,8 @@ from ...models import Check, Property
 
 
 class Command(BaseCommand):
-    def run_check(self, property):
+    def run_check(self, property_id):
+        property = Property.objects.get(id=property_id)
         try:
             headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 Status/1.0.0"}
             response = requests.get(property.url, timeout=5, headers=headers)
@@ -67,7 +68,7 @@ class Command(BaseCommand):
                     "[Scheduler] Running {} checks...".format(len(properties))
                 )
                 processes = [
-                    Process(target=self.run_check, args=(p,)) for p in properties
+                    Process(target=self.run_check, args=(p.id,)) for p in properties
                 ]
                 for p in processes:
                     p.daemon = True
