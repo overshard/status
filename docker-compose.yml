@@ -22,9 +22,9 @@ services:
     ports:
       - "${PORT}:${PORT}"
     command: >
-      gunicorn status.asgi:application --worker-class uvicorn.workers.UvicornWorker
-        --workers 4 --bind :${PORT} --log-file - --access-logfile -
-        --error-logfile -
+      gunicorn status.asgi:application --workers 4 --max-requests 256
+      --timeout 30 --bind :${PORT} --worker-class uvicorn.workers.UvicornWorker
+      --log-file -
     depends_on:
       - db
     restart: unless-stopped
