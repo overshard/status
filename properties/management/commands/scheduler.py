@@ -54,13 +54,17 @@ class Command(BaseCommand):
         self.stdout.write("[Scheduler] Starting scheduler...")
 
         while True:
-            properties = [p.id for p in Property.objects.all() if p.should_check()]
-            db.connections.close_all()
+            properties = [p for p in Property.objects.all() if p.should_check()]
             for property in properties:
-                threading.Thread(target=self.run_check, args=(property,)).start()
                 property.next_run_at = property.get_next_run_at()
                 property.last_run_at = timezone.now()
                 property.save()
+
+            properties = [p.id for p in properties]
+
+            db.connections.close_all()
+            for property in properties:
+                threading.Thread(target=self.run_check, args=(property,)).start()
 
             self.stdout.write("[Scheduler] Sleeping scheduler for 30 seconds...")
             try:
