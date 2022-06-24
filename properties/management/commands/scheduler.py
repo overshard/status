@@ -1,16 +1,17 @@
-import time
 import threading
+import time
 
 import requests
+from django import db
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from properties.models import Check, Property
-from accounts.models import User
 
 
 class Command(BaseCommand):
-    def run_check(self, property):
+    def run_check(self, property_id):
+        property = Property.objects.get(id=property_id)
         try:
             headers = {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 Status/1.0.0"
@@ -53,7 +54,8 @@ class Command(BaseCommand):
         self.stdout.write("[Scheduler] Starting scheduler...")
 
         while True:
-            properties = [p for p in Property.objects.all() if p.should_check()]
+            properties = [p.id for p in Property.objects.all() if p.should_check()]
+            db.connections.close_all()
             for property in properties:
                 threading.Thread(target=self.run_check, args=(property,)).start()
                 property.next_run_at = property.get_next_run_at()
