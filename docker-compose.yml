@@ -6,36 +6,25 @@
 version: "3"
 
 services:
-  db:
-    image: postgres:alpine
-    container_name: status_db
-    env_file: .env
-    volumes:
-      - /srv/data/status/db/:/var/lib/postgresql/data/
-    restart: unless-stopped
   web:
     container_name: status_web
     build: .
     env_file: .env
     volumes:
-      - /srv/data/status/media/:/data/media/
+      - /srv/data/analytics/:/data/
     ports:
       - "${PORT}:${PORT}"
     command: >
       gunicorn status.asgi:application --workers 2 --max-requests 256
       --timeout 30 --bind :${PORT} --worker-class uvicorn.workers.UvicornWorker
       --log-file -
-    depends_on:
-      - db
     restart: unless-stopped
   worker:
     container_name: status_worker
     build: .
     env_file: .env
     volumes:
-      - /srv/data/status/media/:/data/media/
+      - /srv/data/analytics/:/data/
     command: >
       python3 manage.py scheduler
-    depends_on:
-      - db
     restart: unless-stopped
