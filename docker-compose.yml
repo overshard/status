@@ -11,7 +11,7 @@ services:
     build: .
     env_file: .env
     volumes:
-      - /srv/data/analytics/:/data/
+      - /srv/data/status/:/data/
     ports:
       - "${PORT}:${PORT}"
     command: >
@@ -24,7 +24,7 @@ services:
     build: .
     env_file: .env
     volumes:
-      - /srv/data/analytics/:/data/
+      - /srv/data/status/:/data/
     command: >
       python3 manage.py scheduler
     restart: unless-stopped
