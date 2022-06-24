@@ -141,9 +141,9 @@ good enough security and much better than nothing!
 
 Server:
 
-    apk update && apk upgrade && apk add docker docker-compose caddy git iptables ip6tables ufw moreutils htop
+    apk update && apk upgrade && apk add docker docker-compose caddy git iptables ip6tables ufw
     ufw allow 22/tcp && ufw allow 80/tcp && ufw allow 443/tcp && ufw --force enable
-    echo -e "apk upgrade --update | ts '[%Y-%m-%d %H:%M:%S]' >> /var/log/apk-autoupgrade.log" > /etc/periodic/daily/apk-autoupgrade && chmod 700 /etc/periodic/daily/apk-autoupgrade
+    echo -e "#!/bin/sh\napk upgrade --update | sed \"s/^/[\`date\`] /\" >> /var/log/apk-autoupgrade.log" > /etc/periodic/daily/apk-autoupgrade && chmod 700 /etc/periodic/daily/apk-autoupgrade
     rc-update add docker boot && service docker start
     mkdir -p /srv/git/status.git && cd /srv/git/status.git && git init --bare
 
