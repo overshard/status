@@ -6,6 +6,10 @@
 version: "3"
 
 services:
+  email:
+    container_name: status_email
+    image: overshard/exim
+    restart: unless-stopped
   web:
     container_name: status_web
     build: .

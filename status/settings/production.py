@@ -52,6 +52,13 @@ DATABASES = {
 }
 
 
+# Email
+# https://docs.djangoproject.com/en/4.0/topics/email/#smtp-backend
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "email"
+
+
 # Media files (Images, Videos)
 # https://docs.djangoproject.com/en/4.0/ref/settings/#media-root
 

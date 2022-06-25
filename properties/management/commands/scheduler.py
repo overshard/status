@@ -3,6 +3,7 @@ import time
 
 import requests
 from django import db
+from django.core.mail import send_mail
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
@@ -10,6 +11,14 @@ from properties.models import Check, Property
 
 
 class Command(BaseCommand):
+    def send_email(self, property):
+        send_mail(
+            "Status: Property went down",
+            f"Property {property.name} went down at {timezone.now()}",
+            "noreply@bythewood.me",
+            [property.user.email],
+        )
+
     def run_check(self, property_id):
         property = Property.objects.get(id=property_id)
         try:
@@ -34,19 +43,21 @@ class Command(BaseCommand):
             response_time=response_time,
             headers=dict(headers),
         )
-        if property.user.discord_webhook_url and status_code != 200:
-            payload = {
-                "username": "Status",
-                "embeds": [
-                    {
-                        "title": "Status",
-                        "description": f"{property.url} is down!",
-                        "color": 16711680,
-                        "timestamp": timezone.now().isoformat(),
-                    }
-                ],
-            }
-            requests.post(property.user.discord_webhook_url, json=payload)
+        if status_code != 200:
+            self.send_email(property)
+        # if property.user.discord_webhook_url and status_code != 200:
+        #     payload = {
+        #         "username": "Status",
+        #         "embeds": [
+        #             {
+        #                 "title": "Status",
+        #                 "description": f"{property.url} is down!",
+        #                 "color": 16711680,
+        #                 "timestamp": timezone.now().isoformat(),
+        #             }
+        #         ],
+        #     }
+        #     requests.post(property.user.discord_webhook_url, json=payload)
 
         self.stdout.write("[Scheduler] Checked {}".format(property.url))
 

@@ -38,6 +38,12 @@ DATABASES = {
 }
 
 
+# Email
+# https://docs.djangoproject.com/en/4.0/topics/email/#console-backend
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+
 # Media files (Images, Videos)
 # https://docs.djangoproject.com/en/4.0/ref/settings/#media-root
 
