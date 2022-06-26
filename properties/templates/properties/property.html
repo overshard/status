@@ -119,6 +119,14 @@
           <span>Hide server version data</span>
           <span class="badge {% if property.hides_server_version %}bg-success{% else %}bg-danger{% endif %}">{{ property.hides_server_version }}</span>
         </li>
+        <li class="list-group-item d-flex justify-content-between">
+          <span>Use HSTS</span>
+          <span class="badge {% if property.has_hsts %}bg-success{% else %}bg-danger{% endif %}">{{ property.has_hsts }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+          <span>Use HSTS preload</span>
+          <span class="badge {% if property.has_hsts_preload %}bg-success{% else %}bg-danger{% endif %}">{{ property.has_hsts_preload }}</span>
+        </li>
       </ul>
     </div>
     <div class="col-12 col-md-4">

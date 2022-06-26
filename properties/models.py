@@ -1,4 +1,5 @@
 import uuid
+import re
 
 import requests
 from django.contrib.auth import get_user_model
@@ -50,6 +51,27 @@ class SecurityMixin:
         ):
             return True
         return False
+
+    @property
+    def has_hsts(self):
+        # hsts has at least one year set
+        hsts = self.latest_headers.get("strict-transport-security", None)
+        if hsts is None:
+            return False
+        # use re to get the max-age value
+        max_age = re.search(r"max-age=(\d+)", hsts)
+        if max_age is None:
+            return False
+        # convert to int and compare
+        max_age = int(max_age.group(1))
+        return max_age >= 31536000
+
+    @property
+    def has_hsts_preload(self):
+        hsts = self.latest_headers.get("strict-transport-security", None)
+        if hsts is None:
+            return False
+        return "preload" in hsts.lower()
 
     @property
     def has_security_issue(self):
