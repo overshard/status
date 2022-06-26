@@ -3,8 +3,9 @@ import time
 
 import requests
 from django import db
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage
 from django.core.management.base import BaseCommand
+from django.template.loader import render_to_string
 from django.utils import timezone
 
 from properties.models import Check, Property
@@ -12,12 +13,13 @@ from properties.models import Check, Property
 
 class Command(BaseCommand):
     def send_email(self, property):
-        send_mail(
-            "Status: Property went down",
-            f"Property {property.name} went down at {timezone.now()}",
-            "noreply@bythewood.me",
-            [property.user.email],
-        )
+        subject = f"Status: {property.name} is down!"
+        message = render_to_string("emails/property_down.html", {"property": property})
+        from_email = "noreply@bythewood.me"
+        to_emails = [property.user.email]
+        email = EmailMessage(subject, message, from_email, to_emails)
+        email.content_subtype = "html"
+        email.send()
 
     def run_check(self, property_id):
         property = Property.objects.get(id=property_id)
