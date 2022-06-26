@@ -87,6 +87,10 @@ class SecurityMixin:
             return True
         if not self.hides_server_version:
             return True
+        if not self.has_hsts:
+            return True
+        if not self.has_hsts_preload:
+            return True
         return False
 
 
