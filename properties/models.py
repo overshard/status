@@ -1,121 +1,16 @@
 import uuid
 
+import requests
 from django.contrib.auth import get_user_model
+from django.core.mail import EmailMessage
 from django.db import models
+from django.template.loader import render_to_string
 from django.utils import timezone
 
 User = get_user_model()
 
 
-class Property(models.Model):
-    """
-    A site that we attach all our status hits to and connect up to a user.
-    """
-
-    RUN_INTERVAL_CHOICES = (
-        (60, "Every 1 minute"),
-        (180, "Every 3 minutes"),
-        (300, "Every 5 minutes"),
-        (900, "Every 15 minutes"),
-        (1800, "Every 30 minutes"),
-        (3600, "Every hour"),
-    )
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="properties")
-
-    url = models.CharField(max_length=255)
-
-    is_public = models.BooleanField(default=False)
-
-    run_interval = models.IntegerField(choices=RUN_INTERVAL_CHOICES, default=180)
-    last_run_at = models.DateTimeField(blank=True, null=True)
-    next_run_at = models.DateTimeField(blank=True, null=True)
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = "Property"
-        verbose_name_plural = "Properties"
-
-    def __str__(self):
-        return self.url
-
-    @property
-    def name(self):
-        return self.url.split("/")[2].replace("www.", "")
-
-    def should_check(self):
-        now = timezone.now()
-        if self.last_run_at is None:
-            return True
-        if self.next_run_at is None:
-            return True
-        return self.next_run_at <= now
-
-    def get_next_run_at(self):
-        """
-        Returns the next run datetime. Should be in whole increments of the interval.
-        """
-        now = timezone.now()
-        if self.run_interval == 60:
-            return now.replace(
-                minute=(now.minute // 1) * 1, second=0, microsecond=0
-            ) + timezone.timedelta(minutes=1)
-        elif self.run_interval == 180:
-            return now.replace(
-                minute=(now.minute // 3) * 3, second=0, microsecond=0
-            ) + timezone.timedelta(minutes=3)
-        elif self.run_interval == 300:
-            return now.replace(
-                minute=(now.minute // 5) * 5, second=0, microsecond=0
-            ) + timezone.timedelta(minutes=5)
-        elif self.run_interval == 900:
-            return now.replace(
-                minute=(now.minute // 15) * 15, second=0, microsecond=0
-            ) + timezone.timedelta(minutes=15)
-        elif self.run_interval == 1800:
-            return now.replace(
-                minute=(now.minute // 30) * 30, second=0, microsecond=0
-            ) + timezone.timedelta(minutes=30)
-        elif self.run_interval == 3600:
-            today = now.replace(minute=0, second=0, microsecond=0)
-            return today + timezone.timedelta(hours=1)
-        else:
-            raise ValueError("Invalid run interval")
-
-    @property
-    def total_checks(self):
-        return self.statuses.count()
-
-    @property
-    def current_status(self):
-        try:
-            return self.statuses.latest("created_at").status_code
-        except Check.DoesNotExist:
-            return 200
-
-    @property
-    def avg_response_time(self):
-        try:
-            return int(
-                self.statuses.all()[:31].aggregate(models.Avg("response_time"))[
-                    "response_time__avg"
-                ]
-            )
-        except TypeError:
-            return 0
-
-    @property
-    def latest_headers(self):
-        try:
-            # return all headers lowercase to make them easier to use
-            return {
-                k.lower(): v.lower() for k, v in self.statuses.latest().headers.items()
-            }
-        except Check.DoesNotExist:
-            return {}
+class SecurityMixin:
 
     @property
     def invalid_cert(self):
@@ -171,6 +66,180 @@ class Property(models.Model):
         if not self.hides_server_version:
             return True
         return False
+
+
+class AlertsMixin:
+
+    def send_email(self):
+        subject = f"Status: {self.name} is down!"
+        message = render_to_string("emails/property_down.html", {"property": self})
+        from_email = "noreply@bythewood.me"
+        to_emails = [self.user.email]
+        email = EmailMessage(subject, message, from_email, to_emails)
+        email.content_subtype = "html"
+        email.send()
+
+    def send_discord_message(self):
+        if self.user.discord_webhook_url:
+            payload = {
+                "username": "Status",
+                "embeds": [
+                    {
+                        "title": "Status",
+                        "description": f"{property.url} is down!",
+                        "color": 16711680,
+                        "timestamp": timezone.now().isoformat(),
+                    }
+                ],
+            }
+            requests.post(self.user.discord_webhook_url, json=payload)
+
+    def send_alerts(self):
+        # if the past two checks were != 200 send alerts
+        checks = self.checks.order_by("-created_at")[:2]
+        if checks[0].status_code != 200 or checks[1].status_code != 200:
+            self.send_email()
+            self.send_discord_message()
+
+
+class Property(AlertsMixin, SecurityMixin, models.Model):
+    """
+    A site that we attach all our status hits to and connect up to a user.
+    """
+
+    RUN_INTERVAL_CHOICES = (
+        (60, "Every 1 minute"),
+        (180, "Every 3 minutes"),
+        (300, "Every 5 minutes"),
+        (900, "Every 15 minutes"),
+        (1800, "Every 30 minutes"),
+        (3600, "Every hour"),
+    )
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="properties")
+
+    url = models.CharField(max_length=255)
+
+    is_public = models.BooleanField(default=False)
+
+    run_interval = models.IntegerField(choices=RUN_INTERVAL_CHOICES, default=180)
+    last_run_at = models.DateTimeField(blank=True, null=True)
+    next_run_at = models.DateTimeField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Property"
+        verbose_name_plural = "Properties"
+
+    def __str__(self):
+        return self.url
+
+    @property
+    def name(self):
+        return self.url.split("/")[2].replace("www.", "")
+
+    def get_next_run_at(self):
+        """
+        Returns the next run datetime. Should be in whole increments of the interval.
+        """
+        now = timezone.now()
+        if self.run_interval == 60:
+            return now.replace(
+                minute=(now.minute // 1) * 1, second=0, microsecond=0
+            ) + timezone.timedelta(minutes=1)
+        elif self.run_interval == 180:
+            return now.replace(
+                minute=(now.minute // 3) * 3, second=0, microsecond=0
+            ) + timezone.timedelta(minutes=3)
+        elif self.run_interval == 300:
+            return now.replace(
+                minute=(now.minute // 5) * 5, second=0, microsecond=0
+            ) + timezone.timedelta(minutes=5)
+        elif self.run_interval == 900:
+            return now.replace(
+                minute=(now.minute // 15) * 15, second=0, microsecond=0
+            ) + timezone.timedelta(minutes=15)
+        elif self.run_interval == 1800:
+            return now.replace(
+                minute=(now.minute // 30) * 30, second=0, microsecond=0
+            ) + timezone.timedelta(minutes=30)
+        elif self.run_interval == 3600:
+            today = now.replace(minute=0, second=0, microsecond=0)
+            return today + timezone.timedelta(hours=1)
+        else:
+            raise ValueError("Invalid run interval")
+
+    def should_check(self):
+        now = timezone.now()
+        if self.last_run_at is None:
+            return True
+        if self.next_run_at is None:
+            return True
+        return self.next_run_at <= now
+
+    def run_check(self):
+        try:
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 Status/1.0.0"
+            }
+            response = requests.get(self.url, timeout=5, headers=headers)
+            response_time = response.elapsed.total_seconds() * 1000
+            status_code = response.status_code
+            headers = response.headers
+        except (requests.exceptions.SSLError):
+            response_time = 5000
+            status_code = 526
+            headers = {}
+        except (requests.exceptions.RequestException, requests.exceptions.Timeout):
+            response_time = 5000
+            status_code = 408
+            headers = {}
+        return Check.objects.create(
+            property=self,
+            status_code=status_code,
+            response_time=response_time,
+            headers=dict(headers),
+        )
+
+    def process_check(self):
+        check = self.run_check()
+        if check.status_code != 200:
+            self.send_alerts()
+
+    @property
+    def total_checks(self):
+        return self.statuses.count()
+
+    @property
+    def current_status(self):
+        try:
+            return self.statuses.latest("created_at").status_code
+        except Check.DoesNotExist:
+            return 200
+
+    @property
+    def avg_response_time(self):
+        try:
+            return int(
+                self.statuses.all()[:31].aggregate(models.Avg("response_time"))[
+                    "response_time__avg"
+                ]
+            )
+        except TypeError:
+            return 0
+
+    @property
+    def latest_headers(self):
+        try:
+            # return all headers lowercase to make them easier to use
+            return {
+                k.lower(): v.lower() for k, v in self.statuses.latest().headers.items()
+            }
+        except Check.DoesNotExist:
+            return {}
 
 
 class Check(models.Model):

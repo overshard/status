@@ -1,65 +1,17 @@
 import threading
 import time
 
-import requests
 from django import db
-from django.core.mail import EmailMessage
 from django.core.management.base import BaseCommand
-from django.template.loader import render_to_string
 from django.utils import timezone
 
-from properties.models import Check, Property
+from properties.models import Property
 
 
 class Command(BaseCommand):
-    def send_email(self, property):
-        subject = f"Status: {property.name} is down!"
-        message = render_to_string("emails/property_down.html", {"property": property})
-        from_email = "noreply@bythewood.me"
-        to_emails = [property.user.email]
-        email = EmailMessage(subject, message, from_email, to_emails)
-        email.content_subtype = "html"
-        email.send()
-
-    def run_check(self, property_id):
+    def thread_target(self, property_id):
         property = Property.objects.get(id=property_id)
-        try:
-            headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 Status/1.0.0"
-            }
-            response = requests.get(property.url, timeout=5, headers=headers)
-            response_time = response.elapsed.total_seconds() * 1000
-            status_code = response.status_code
-            headers = response.headers
-        except (requests.exceptions.SSLError):
-            response_time = 5000
-            status_code = 526
-            headers = {}
-        except (requests.exceptions.RequestException, requests.exceptions.Timeout):
-            response_time = 5000
-            status_code = 408
-            headers = {}
-        Check.objects.create(
-            property=property,
-            status_code=status_code,
-            response_time=response_time,
-            headers=dict(headers),
-        )
-        if status_code != 200:
-            self.send_email(property)
-        # if property.user.discord_webhook_url and status_code != 200:
-        #     payload = {
-        #         "username": "Status",
-        #         "embeds": [
-        #             {
-        #                 "title": "Status",
-        #                 "description": f"{property.url} is down!",
-        #                 "color": 16711680,
-        #                 "timestamp": timezone.now().isoformat(),
-        #             }
-        #         ],
-        #     }
-        #     requests.post(property.user.discord_webhook_url, json=payload)
+        property.process_check()
 
         self.stdout.write("[Scheduler] Checked {}".format(property.url))
 
@@ -68,16 +20,15 @@ class Command(BaseCommand):
 
         while True:
             properties = [p for p in Property.objects.all() if p.should_check()]
-            for property in properties:
-                property.next_run_at = property.get_next_run_at()
-                property.last_run_at = timezone.now()
-                property.save()
+            for p in properties:
+                p.next_run_at = p.get_next_run_at()
+                p.last_run_at = timezone.now()
+                p.save()
 
             properties = [p.id for p in properties]
-
             db.connections.close_all()
-            for property in properties:
-                threading.Thread(target=self.run_check, args=(property,)).start()
+            for p_id in properties:
+                threading.Thread(target=self.thread_target, args=(p_id,)).start()
 
             self.stdout.write("[Scheduler] Sleeping scheduler for 30 seconds...")
             try:

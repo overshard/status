@@ -92,9 +92,9 @@ def property(request, property_id):
     context["BASE_URL"] = settings.BASE_URL
 
     status_response_times = []
-    for status in property_obj.statuses.order_by('created_at')[:31]:
+    for status in reversed(property_obj.statuses.order_by('-created_at')[:31]):
         status_response_times.append(
-            {"label": status.created_at, "count": status.response_time}
+            {"label": status.created_at.isoformat(), "count": status.response_time}
         )
     context["status_response_times_graph"] = status_response_times
 
