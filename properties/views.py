@@ -92,7 +92,7 @@ def property(request, property_id):
     context["BASE_URL"] = settings.BASE_URL
 
     status_response_times = []
-    for status in property_obj.statuses.all()[:31]:
+    for status in property_obj.statuses.order_by('created_at')[:31]:
         status_response_times.append(
             {"label": status.created_at, "count": status.response_time}
         )
@@ -103,6 +103,16 @@ def property(request, property_id):
     )
     context["status_codes_graph"] = [
         {"label": x["status_code"], "count": x["count"]} for x in status_codes
+    ]
+
+    uptime = property_obj.statuses.filter(status_code=200).count()
+    downtime = property_obj.statuses.exclude(status_code=200).count()
+    total = uptime + downtime
+    uptime_pct = round(uptime / total * 100, 2)
+    downtime_pct = round(downtime / total * 100, 2)
+    context["uptime_graph"] = [
+        {"label": "Uptime", "count": uptime_pct},
+        {"label": "Downtime", "count": downtime_pct},
     ]
 
     if request.GET.get("report") == "":

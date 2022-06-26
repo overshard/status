@@ -127,3 +127,43 @@ document.addEventListener("DOMContentLoaded", function () {
     },
   });
 });
+
+document.addEventListener("DOMContentLoaded", function () {
+  const canvas = document.getElementById("chart-uptime");
+  if (!canvas) return;
+  const data = JSON.parse(
+    document.getElementById("chart-uptime-data").innerHTML
+  );
+  const ctx = canvas.getContext("2d");
+  new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: data.map((d) => d.label),
+      datasets: [
+        {
+          data: data.map((d) => d.count),
+          backgroundColor: backgroundColors,
+          borderColor: backgroundColors,
+          borderWidth: 1,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      aspectRatio: 2,
+      plugins: {
+        legend: {
+          position: "right",
+          labels: {
+            boxWidth: 10,
+            boxHeight: 10,
+            font: {
+              size: 12,
+              family: fontStack,
+            },
+          },
+        },
+      },
+    },
+  });
+});

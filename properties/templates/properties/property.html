@@ -5,6 +5,7 @@
 {% block extra_js %}
 {{ status_response_times_graph|json_script:"chart-status-response-times-data" }}
 {{ status_codes_graph|json_script:"chart-status-codes-data" }}
+{{ uptime_graph|json_script:"chart-uptime-data" }}
 <script src="{% static 'properties.js' %}"></script>
 {% endblock %}
 
@@ -89,7 +90,7 @@
 
 <div class="container mt-4">
   <div class="row">
-    <div class="col-12 col-md-8">
+    <div class="col-12 col-md-4">
       <ul class="list-group">
         <li class="list-group-item">
           <strong>Security</strong>
@@ -123,6 +124,11 @@
     <div class="col-12 col-md-4">
       <div class="bg-light mb-4 p-2 rounded">
         <canvas id="chart-status-codes"></canvas>
+      </div>
+    </div>
+    <div class="col-12 col-md-4">
+      <div class="bg-light mb-4 p-2 rounded">
+        <canvas id="chart-uptime"></canvas>
       </div>
     </div>
   </div>
