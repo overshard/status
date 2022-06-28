@@ -146,7 +146,7 @@ def import_property(request, url):
         r.raise_for_status()
     except requests.exceptions.RequestException:
         return
-    if not Property.objects.filter(url=url).exists():
+    if not Property.objects.filter(url=r.url).exists():
         property_obj = Property(
             url=r.url,
             user=request.user,
