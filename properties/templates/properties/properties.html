@@ -127,7 +127,7 @@
   <div class="row my-5">
     <div class="col">
       <h2>Create a new property</h2>
-      <p>The name helps you, the URL helps us.</p>
+      <p>Add any URL you want to check.</p>
       {{ form.errors }}
       <form method="POST" class="row">
         {% csrf_token %}
@@ -139,6 +139,21 @@
         </div>
         <div class="col-12 col-md-2 d-flex align-items-center mb-3">
           <button type="submit" class="btn btn-primary btn-lg h-100 px-5">Create</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="row my-5">
+    <div class="col">
+      <h2>Bulk import properties</h2>
+      <p>Add a CSV file with the first column being the URL.</p>
+      <form method="POST" class="row" enctype="multipart/form-data" action="{% url 'import_properties' %}">
+        {% csrf_token %}
+        <div class="col-12 col-md-6 mb-3">
+          <input type="file" name="csv_file" id="id_csv_file" class="form-control {% if form.file.errors %}is-invalid{% endif %}" required>
+        </div>
+        <div class="col-12 col-md-2 d-flex align-items-center mb-3">
+          <button type="submit" class="btn btn-primary btn h-100 px-5">Import</button>
         </div>
       </form>
     </div>

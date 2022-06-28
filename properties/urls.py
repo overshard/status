@@ -7,5 +7,6 @@ urlpatterns = [
     path('<uuid:property_id>/', views.property, name='property'),
     path('<uuid:property_id>/delete/', views.property_delete, name='property_delete'),
     path('<uuid:property_id>/is-public/', views.adjust_is_public_property, name='adjust_is_public_property'),
+    path('import/', views.import_properties, name='import_properties'),
     path('', views.properties, name='properties'),
 ]

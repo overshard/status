@@ -1,5 +1,9 @@
+import csv
+import io
+import threading
 import uuid
 
+import requests
 from django.conf import settings
 from django.contrib import messages
 from django.core.files.storage import default_storage
@@ -29,14 +33,19 @@ def properties(request):
     else:
         form = PropertyForm()
 
-    properties = request.user.properties.order_by('-url')
+    properties = request.user.properties.order_by("-url")
     properties = sorted(properties, key=lambda x: x.current_status)
     properties = reversed(properties)
 
     return render(
         request,
         "properties/properties.html",
-        {"form": form, "title": "Properties", "description": "Manage your properties.", "properties": properties},
+        {
+            "form": form,
+            "title": "Properties",
+            "description": "Manage your properties.",
+            "properties": properties,
+        },
     )
 
 
@@ -92,7 +101,7 @@ def property(request, property_id):
     context["BASE_URL"] = settings.BASE_URL
 
     status_response_times = []
-    for status in reversed(property_obj.statuses.order_by('-created_at')[:31]):
+    for status in reversed(property_obj.statuses.order_by("-created_at")[:31]):
         status_response_times.append(
             {"label": status.created_at.isoformat(), "count": status.response_time}
         )
@@ -126,3 +135,39 @@ def property(request, property_id):
             return response
 
     return render(request, "properties/property.html", context)
+
+
+def import_property(request, url):
+    url = url.lower().strip()
+    if not url.startswith("http"):
+        url = "http://" + url
+    try:
+        r = requests.get(url)
+        r.raise_for_status()
+    except requests.exceptions.RequestException:
+        return
+    if not Property.objects.filter(url=url).exists():
+        property_obj = Property(
+            url=r.url,
+            user=request.user,
+        )
+        property_obj.save()
+
+
+def import_properties(request):
+    if not request.user.is_authenticated:
+        return redirect("/")
+
+    if request.method == "POST":
+        file = request.FILES["csv_file"]
+        reader = csv.reader(io.TextIOWrapper(file.file, encoding="utf-8"))
+        for row in reader:
+            try:
+                url = row[0]
+                threading.Thread(target=import_property, args=(request, url)).start()
+            except IndexError:
+                continue
+        messages.success(request, "Properties imported successfully.")
+        return redirect("properties")
+
+    return redirect("properties")
