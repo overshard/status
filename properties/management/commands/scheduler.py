@@ -5,10 +5,18 @@ from django import db
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from properties.models import Property
+from properties.models import Property, Check
 
 
 class Command(BaseCommand):
+    def clean_checks(self):
+        """
+        Clean checks older than 3 days.
+        """
+        self.stdout.write("[Scheduler] Cleaning checks older than 3 days...")
+        Check.objects.filter(created_at__lt=timezone.now() - timezone.timedelta(days=3)).delete()
+        self.stdout.write("[Scheduler] Cleaned checks older than 3 days.")
+
     def thread_target(self, property_id):
         property = Property.objects.get(id=property_id)
         property.process_check()
@@ -29,6 +37,8 @@ class Command(BaseCommand):
             db.connections.close_all()
             for p_id in properties:
                 threading.Thread(target=self.thread_target, args=(p_id,)).start()
+
+            self.clean_checks()
 
             self.stdout.write("[Scheduler] Sleeping scheduler for 30 seconds...")
             try:
