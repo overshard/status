@@ -19,41 +19,79 @@
 
 {% block main %}
 <div class="container">
-  <div class="row mt-5 d-flex align-items-center">
-    <div class="col">
+  <div class="row my-3 d-flex align-items-center">
+    <div class="col-sm-6">
       <h1>{{ title }}</h1>
-      <p>All properties you've created.</p>
+      <p>All properties you've created with their current active status and issues.</p>
     </div>
-    <div class="col">
+    <div class="col-sm-6">
       <form method="get" class="d-flex">
-        <div class="form-floating me-2 flex-grow-1">
+        <div class="form-floating flex-grow-1 rounded-0 rounded-start">
           <input type="text" class="form-control" name="q" id="id_search" placeholder="Search" {% if q %}value="{{ q }}"{% endif %} />
           <label for="id_search" class="form-label">Search</label>
         </div>
-        <button type="submit" class="btn btn-primary">Search</button>
+        <button type="submit" class="btn btn-secondary px-3 rounded-0 rounded-end">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+            <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+          </svg>
+        </button>
+        <button class="btn btn-primary px-3 ms-4" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePropertyAdd" aria-expanded="false" aria-controls="collapsePropertyAdd">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-node-plus" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M11 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM6.025 7.5a5 5 0 1 1 0 1H4A1.5 1.5 0 0 1 2.5 10h-1A1.5 1.5 0 0 1 0 8.5v-1A1.5 1.5 0 0 1 1.5 6h1A1.5 1.5 0 0 1 4 7.5h2.025zM11 5a.5.5 0 0 1 .5.5v2h2a.5.5 0 0 1 0 1h-2v2a.5.5 0 0 1-1 0v-2h-2a.5.5 0 0 1 0-1h2v-2A.5.5 0 0 1 11 5zM1.5 7a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1z"/>
+          </svg>
+        </button>
       </form>
     </div>
   </div>
-  <div class="row my-5">
+  <div class="row mx-0 mb-3 bg-dark py-3 rounded border border-warning collapse" id="collapsePropertyAdd">
+    <div class="col-sm-6">
+      <h2 class="text-white">Add a new property</h2>
+      <p class="text-white">All public URLs are supported.</p>
+      {{ form.errors }}
+      <form method="POST" class="d-flex">
+        {% csrf_token %}
+        <div class="flex-grow-1">
+          <div class="form-floating">
+            <input type="text" name="url" id="id_url" class="form-control {% if form.url.errors %}is-invalid{% endif %} rounded-0 rounded-start" placeholder="URL" required>
+            <label for="id_url">URL</label>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary px-3 rounded-0 rounded-end">
+          <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
+            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+          </svg>
+        </button>
+      </form>
+    </div>
+    <div class="col-sm-6">
+      <h2 class="text-white">Bulk import properties</h2>
+      <p class="text-white">Add a CSV file with the first column being the URL.</p>
+      <form method="POST" class="d-flex" enctype="multipart/form-data" action="{% url 'import_properties' %}">
+        {% csrf_token %}
+        <input type="file" name="csv_file" id="id_csv_file" class="form-control py-3 px-4 {% if form.file.errors %}is-invalid{% endif %} rounded-0 rounded-start" required>
+        <button type="submit" class="btn btn-primary px-4 rounded-0 rounded-end">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
+            <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+            <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+          </svg>
+        </button>
+      </form>
+    </div>
+  </div>
+  <div class="row">
     <div class="col" id="properties">
-      <div class="card mb-3 bg-secondary text-white">
+      <div class="card rounded-0 border-0 rounded-top py-1 bg-secondary text-white">
         <div class="row g-0">
-          <div class="col-6 offset-md-1 col-md-2 d-flex align-items-center">
+          <div class="col-6 col-md-2 d-flex align-items-center">
             <div class="card-body py-1">
               <div class="card-title h3 mb-0">{{ user.total_properties }}</div>
               <p class="card-text">Properties</p>
             </div>
           </div>
-          <div class="col-6 offset-md-3 col-md-2 d-flex align-items-center">
-            <div class="card-body py-1">
-              <div class="card-title h3 mb-0">{{ user.total_checks }}</div>
-              <p class="card-text">Total checks</p>
-            </div>
-          </div>
-          <div class="col-6 col-md-2 d-flex align-items-center">
+          <div class="col-6 offset-md-2 col-md-2 d-flex align-items-center">
             <div class="card-body py-1">
               <div class="card-title h3 mb-0">{{ user.total_properties_down }}</div>
-              <p class="card-text">Total properties down</p>
+              <p class="card-text">Properties down</p>
             </div>
           </div>
           <div class="col-6 col-md-2 d-flex align-items-center">
@@ -62,22 +100,27 @@
               <p class="card-text">Avg. response time</p>
             </div>
           </div>
+          <div class="col-6 col-md-2 d-flex align-items-center">
+            <div class="card-body py-1">
+              <div class="card-title h3 mb-0">{{ user.total_checks }}</div>
+              <p class="card-text">Total checks</p>
+            </div>
+          </div>
         </div>
       </div>
       {% for property in properties.object_list %}
-        <div class="card mb-3 bg-light">
+        <div class="card rounded-0 border-0">
           <div class="row g-0">
-            <div class="col-sm-1">
-              <div class="w-100 h-100 rounded-start {% if property.current_status == 200 %}bg-success{% else %}bg-danger{% endif %}"></div>
-            </div>
-            <div class="col-12 col-md-3">
+            <div class="col-12 col-md-4 bg-dark text-white">
               <div class="card-body">
-                <h2 class="card-title h4">{{ property.name }}</h2>
-                <a href="{% url 'property' property.id %}" class="btn btn-sm px-4 btn-primary">View</a>
-                {% if not property.is_protected %}
-                <button type="button" class="btn btn-sm px-4 btn-outline-danger" data-bs-toggle="modal" data-bs-target="#delete-modal-{{ property.id }}">
-                  Delete
-                </button>
+                <h2 class="card-title h4 text-truncate">{{ property.name }}</h2>
+                <div class="d-flex">
+                  <a href="{% url 'property' property.id %}" class="btn btn-sm btn-success me-2 w-25">View</a>
+                  {% if not property.is_protected %}
+                  <button type="button" class="btn btn-sm btn-outline-danger w-25" data-bs-toggle="modal" data-bs-target="#delete-modal-{{ property.id }}">
+                    Delete
+                  </button>
+                </div>
                 <div class="modal fade" id="delete-modal-{{ property.id }}" tabindex="-1" aria-labelledby="delete-modal-{{ property.id }}-label" aria-hidden="true">
                   <div class="modal-dialog">
                     <div class="modal-content">
@@ -98,25 +141,25 @@
                 {% endif %}
               </div>
             </div>
-            <div class="col-6 col-md-2 d-flex align-items-center">
+            <div class="col-6 col-md-2 d-flex align-items-center text-white {% if property.current_status == 200 %}bg-success{% else %}bg-danger{% endif %}">
               <div class="card-body">
                 <div class="card-title h4">{% if property.current_status == 200 %}Ok{% else %}Failed{% endif %}</div>
                 <div class="card-text text-truncate small">Current status</div>
               </div>
             </div>
-            <div class="col-6 col-md-2 d-flex align-items-center">
+            <div class="col-6 col-md-2 d-flex align-items-center text-white {% if not property.invalid_cert %}bg-success{% else %}bg-danger{% endif %}">
               <div class="card-body">
                 <div class="card-title h4">{% if not property.invalid_cert %}Ok{% else %}Unhealthy{% endif %}</div>
                 <div class="card-text text-truncate small">Certificate</div>
               </div>
             </div>
-            <div class="col-6 col-md-2 d-none d-md-flex d-flex align-items-center">
+            <div class="col-6 col-md-2 d-none d-md-flex d-flex align-items-center text-white {% if not property.has_security_issue %}bg-success{% else %}bg-danger{% endif %}">
               <div class="card-body">
                 <div class="card-title h4">{% if not property.has_security_issue %}Ok{% else %}Failed{% endif %}</div>
                 <div class="card-text text-truncate small">Security</div>
               </div>
             </div>
-            <div class="col-6 col-md-2 d-none d-md-flex d-flex align-items-center">
+            <div class="col-6 col-md-2 d-none d-md-flex d-flex align-items-center text-white {% if property.avg_response_time > 500 %}bg-danger{% else %}bg-success{% endif %}">
               <div class="card-body">
                 <div class="card-title h4">{% if property.avg_response_time > 500 %}Unhealthy{% else %}Ok{% endif %}</div>
                 <div class="card-text text-truncate small">Response time</div>
@@ -128,8 +171,8 @@
     </div>
   </div>
   {% if properties.paginator.num_pages > 1 %}
-  <div class="row">
-    <div class="col">
+  <div class="row mt-5">
+    <div class="col d-flex justify-content-center">
       <nav aria-label="Pagination">
         <ul class="pagination">
           <li class="page-item {% if not properties.has_previous %}disabled{% endif %}">
@@ -150,39 +193,5 @@
     </div>
   </div>
   {% endif %}
-  <div class="row my-5">
-    <div class="col">
-      <h2>Create a new property</h2>
-      <p>Add any URL you want to check.</p>
-      {{ form.errors }}
-      <form method="POST" class="row">
-        {% csrf_token %}
-        <div class="col-12 col-md-6 mb-3">
-          <div class="form-floating">
-            <input type="text" name="url" id="id_url" class="form-control {% if form.url.errors %}is-invalid{% endif %}" placeholder="URL" required>
-            <label for="id_url">URL</label>
-          </div>
-        </div>
-        <div class="col-12 col-md-2 d-flex align-items-center mb-3">
-          <button type="submit" class="btn btn-primary btn-lg h-100 px-5">Create</button>
-        </div>
-      </form>
-    </div>
-  </div>
-  <div class="row my-5">
-    <div class="col">
-      <h2>Bulk import properties</h2>
-      <p>Add a CSV file with the first column being the URL.</p>
-      <form method="POST" class="row" enctype="multipart/form-data" action="{% url 'import_properties' %}">
-        {% csrf_token %}
-        <div class="col-12 col-md-6 mb-3">
-          <input type="file" name="csv_file" id="id_csv_file" class="form-control {% if form.file.errors %}is-invalid{% endif %}" required>
-        </div>
-        <div class="col-12 col-md-2 d-flex align-items-center mb-3">
-          <button type="submit" class="btn btn-primary btn h-100 px-5">Import</button>
-        </div>
-      </form>
-    </div>
-  </div>
 </div>
 {% endblock %}
