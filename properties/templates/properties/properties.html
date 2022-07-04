@@ -25,15 +25,46 @@
       <p>All properties you've created.</p>
     </div>
     <div class="col">
-      <div class="form-floating mb-3">
-        <input type="text" class="form-control" name="search" id="id_search" placeholder="Search" />
-        <label for="id_search" class="form-label">Search</label>
-      </div>
+      <form method="get" class="d-flex">
+        <div class="form-floating me-2 flex-grow-1">
+          <input type="text" class="form-control" name="q" id="id_search" placeholder="Search" {% if q %}value="{{ q }}"{% endif %} />
+          <label for="id_search" class="form-label">Search</label>
+        </div>
+        <button type="submit" class="btn btn-primary">Search</button>
+      </form>
     </div>
   </div>
   <div class="row my-5">
-    <div class="cod" id="properties">
-      {% for property in properties %}
+    <div class="col" id="properties">
+      <div class="card mb-3 bg-secondary text-white">
+        <div class="row g-0">
+          <div class="col-6 offset-md-1 col-md-2 d-flex align-items-center">
+            <div class="card-body py-1">
+              <div class="card-title h3 mb-0">{{ user.total_properties }}</div>
+              <p class="card-text">Properties</p>
+            </div>
+          </div>
+          <div class="col-6 offset-md-3 col-md-2 d-flex align-items-center">
+            <div class="card-body py-1">
+              <div class="card-title h3 mb-0">{{ user.total_checks }}</div>
+              <p class="card-text">Total checks</p>
+            </div>
+          </div>
+          <div class="col-6 col-md-2 d-flex align-items-center">
+            <div class="card-body py-1">
+              <div class="card-title h3 mb-0">{{ user.total_properties_down }}</div>
+              <p class="card-text">Total properties down</p>
+            </div>
+          </div>
+          <div class="col-6 col-md-2 d-flex align-items-center">
+            <div class="card-body py-1">
+              <div class="card-title h3 mb-0">{{ user.avg_response_time }}</div>
+              <p class="card-text">Avg. response time</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% for property in properties.object_list %}
         <div class="card mb-3 bg-light">
           <div class="row g-0">
             <div class="col-sm-1">
@@ -94,36 +125,31 @@
           </div>
         </div>
       {% endfor %}
-      <div class="card mb-3 bg-secondary text-white">
-        <div class="row g-0">
-          <div class="col-6 offset-md-1 col-md-2 d-flex align-items-center">
-            <div class="card-body py-1">
-              <div class="card-title h3 mb-0">{{ user.total_properties }}</div>
-              <p class="card-text">Properties</p>
-            </div>
-          </div>
-          <div class="col-6 offset-md-3 col-md-2 d-flex align-items-center">
-            <div class="card-body py-1">
-              <div class="card-title h3 mb-0">{{ user.total_checks }}</div>
-              <p class="card-text">Total checks</p>
-            </div>
-          </div>
-          <div class="col-6 col-md-2 d-flex align-items-center">
-            <div class="card-body py-1">
-              <div class="card-title h3 mb-0">{{ user.total_properties_down }}</div>
-              <p class="card-text">Total properties down</p>
-            </div>
-          </div>
-          <div class="col-6 col-md-2 d-flex align-items-center">
-            <div class="card-body py-1">
-              <div class="card-title h3 mb-0">{{ user.avg_response_time }}</div>
-              <p class="card-text">Avg. response time</p>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
+  {% if properties.paginator.num_pages > 1 %}
+  <div class="row">
+    <div class="col">
+      <nav aria-label="Pagination">
+        <ul class="pagination">
+          <li class="page-item {% if not properties.has_previous %}disabled{% endif %}">
+            <a class="page-link" {% if properties.has_previous %}href="?page={{ properties.previous_page_number }}"{% endif %}>Previous</a>
+          </li>
+
+          {% for page_num in properties.paginator.page_range %}
+            <li class="page-item {% if properties.number == page_num %}active{% endif %}">
+              <a class="page-link" href="/properties/?page={{ page_num }}">{{ page_num }}</a>
+            </li>
+          {% endfor %}
+
+          <li class="page-item {% if not properties.has_next %}disabled{% endif %}">
+            <a class="page-link" {% if properties.has_next %}href="?page={{ properties.next_page_number }}"{% endif %}>Next</a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+  {% endif %}
   <div class="row my-5">
     <div class="col">
       <h2>Create a new property</h2>

@@ -7,6 +7,7 @@ import requests
 from django.conf import settings
 from django.contrib import messages
 from django.core.files.storage import default_storage
+from django.core.paginator import Paginator
 from django.db import models
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
@@ -33,9 +34,15 @@ def properties(request):
     else:
         form = PropertyForm()
 
-    properties = request.user.properties.order_by("-url")
-    properties = sorted(properties, key=lambda x: x.current_status)
-    properties = reversed(properties)
+    properties = request.user.properties.order_by("url")
+
+    q = request.GET.get("q")
+    if q:
+        properties = properties.filter(url__icontains=q)
+
+    page = request.GET.get("page")
+    properties = Paginator(properties, 25)
+    properties = properties.get_page(page)
 
     return render(
         request,
@@ -44,6 +51,7 @@ def properties(request):
             "form": form,
             "title": "Properties",
             "description": "Manage your properties.",
+            "q": q,
             "properties": properties,
         },
     )
