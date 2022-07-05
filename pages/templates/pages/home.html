@@ -16,17 +16,24 @@
 
 
 {% block main %}
-<div class="bg-dark mb-5 home-hero" style="--background-image: url({% static 'images/home-hero.webp' %});">
+<div class="bg-dark mb-5 home-hero d-flex align-items-center" style="--background-image: url({% static 'images/home-hero.webp' %});">
   <div class="container">
     <div class="row">
-      <div class="col-lg-6 offset-lg-3 col-sm-8 offset-sm-2 col-xs-12 offset-xs-0 text-center text-white">
-        <div class="mb-5">
+      <div class="col-12 col-lg-10 col-xl-8">
+        <div class="fs-4 text-light">
           <span class="badge bg-warning text-black">Alpha</span> Things are rapidly changing!
         </div>
-        <h1 class="display-3 mb-5">Simple self-hosted status</h1>
-        <p class="mb-0">Made by <a href="https://isaacbythewood.com/" class="text-white">Isaac Bythewood</a>,
-          simple status for people who want to host their own and hack on it
-          a bit.</p>
+        <h1 class="display-1 mt-4 text-light fw-bolder">Self-hosted website status monitoring</h1>
+        <p class="mb-0 text-white mt-4 fs-4">Made by <a href="https://isaacbythewood.com/" class="text-white">Isaac Bythewood</a>,
+          a simple opinionated self-hosted website status monitoring solution.</p>
+        <div class="mt-4">
+          <a href="/accounts/login/" class="btn btn-light btn-lg me-3">
+            Login
+          </a>
+          <a href="https://github.com/overshard/status" target="_blank" class="btn btn-outline-light btn-lg">
+            Source code
+          </a>
+        </div>
       </div>
     </div>
   </div>
