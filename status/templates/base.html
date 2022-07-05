@@ -56,31 +56,38 @@
   </main>
 
   {% block footer %}
-  <footer class="border-top py-5 mt-5 bg-dark text-light d-print-none">
+  <footer class="mt-4 bg-black text-light d-print-none">
     <div class="container">
       <div class="row">
-        <div class="col-12 col-md-6 col-lg-4">
-          <div class="h5 text-muted mb-3 text-uppercase">Status</div>
-          <p>Made by <a href="https://isaacbythewood.com/" class="text-light">Isaac Bythewood</a>, simple status for people who want to host their own and hack on it a bit.</p>
-          <p>Absolutely no warranty or support will be provided, you've been warned.</p>
+        <div class="col-12 col-md-12 col-lg-4 mb-5 mb-lg-0">
+          <div class="h5 font-monospace mb-3">Status</div>
+          <p>Made by <a href="https://isaacbythewood.com/" class="text-light">Isaac Bythewood</a>, a simple opinionated self-hosted website status monitoring solution.</p>
         </div>
-        <div class="col-6 col-md-3 col-lg-2 offset-lg-4">
-          <div class="h5 text-muted mb-3 text-uppercase">Pages</div>
+        <div class="col-12 col-md-4 col-lg-2 offset-lg-2 d-none d-md-block">
+          <div class="h5 font-monospace mb-3">Projects</div>
           <ul class="list-unstyled">
-            <li><a href="/" class="text-light text-decoration-none">Home</a></li>
-            <li><a href="/changelog/" class="text-light text-decoration-none">Changelog</a></li>
-            <li><a href="/contact/" class="text-light text-decoration-none">Contact</a></li>
+            <li class="mb-2"><a href="https://github.com/overshard/analytics" class="link-footer">Analytics</a></li>
+            <li class="mb-2"><a href="https://github.com/overshard/timelite" class="link-footer">Timelite</a></li>
+            <li class="mb-2"><a href="https://github.com/overshard/ai-art" class="link-footer">AI-Art</a></li>
           </ul>
         </div>
-        <div class="col-6 col-md-3 col-lg-2">
-          <div class="h5 text-muted mb-3 text-uppercase">Accounts</div>
+        <div class="col-6 col-md-4 col-lg-2">
+          <div class="h5 font-monospace mb-3">Pages</div>
+          <ul class="list-unstyled">
+            <li class="mb-2"><a href="/" class="link-footer">Home</a></li>
+            <li class="mb-2"><a href="/changelog/" class="link-footer">Changelog</a></li>
+            <li class="mb-2"><a href="/contact/" class="link-footer">Contact</a></li>
+          </ul>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+          <div class="h5 font-monospace mb-3">Accounts</div>
           <ul class="list-unstyled">
             {% if user.is_authenticated %}
-            <li><a href="/properties/" class="text-light text-decoration-none">Properties</a></li>
-            <li><a href="/accounts/profile/" class="text-light text-decoration-none">Profile</a></li>
-            <li><a href="/accounts/logout/" class="text-light text-decoration-none">Logout</a></li>
+            <li class="mb-2"><a href="/properties/" class="link-footer">Properties</a></li>
+            <li class="mb-2"><a href="/accounts/profile/" class="link-footer">Profile</a></li>
+            <li class="mb-2"><a href="/accounts/logout/" class="link-footer">Logout</a></li>
             {% else %}
-            <li><a href="/accounts/login/" class="text-light text-decoration-none">Login</a></li>
+            <li class="mb-2"><a href="/accounts/login/" class="link-footer">Login</a></li>
             {% endif %}
           </ul>
         </div>
@@ -88,7 +95,7 @@
     </div>
   </footer>
 
-  <div class="bg-black py-4 d-print-none">
+  <div class="bg-dark py-3 d-print-none">
     <div class="container">
       <div class="row">
         <div class="col-sm-6 d-flex align-items-center justify-content-center justify-content-sm-start mt-3 mt-sm-0 order-1 order-sm-0">
