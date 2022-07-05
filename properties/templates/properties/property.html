@@ -78,11 +78,30 @@
   </div>
 </div>
 
-<div class="container my-4">
-  <div class="row text-center">
-    <div class="col">
-      <div class="bg-light mb-4 p-2 rounded">
-        <canvas id="chart-response-times"></canvas>
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col-6 col-md-3 d-flex align-items-center text-white {% if property.current_status == 200 %}bg-success{% else %}bg-danger{% endif %}">
+      <div class="card-body">
+        <div class="card-title h4">{% if property.current_status == 200 %}Ok{% else %}Failed{% endif %}</div>
+        <div class="card-text text-truncate small">Current status</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3 d-flex align-items-center text-white {% if not property.invalid_cert %}bg-success{% else %}bg-danger{% endif %}">
+      <div class="card-body">
+        <div class="card-title h4">{% if not property.invalid_cert %}Ok{% else %}Unhealthy{% endif %}</div>
+        <div class="card-text text-truncate small">Certificate</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3 d-none d-md-flex d-flex align-items-center text-white {% if not property.has_security_issue %}bg-success{% else %}bg-danger{% endif %}">
+      <div class="card-body">
+        <div class="card-title h4">{% if not property.has_security_issue %}Ok{% else %}Failed{% endif %}</div>
+        <div class="card-text text-truncate small">Security</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3 d-none d-md-flex d-flex align-items-center text-white {% if property.avg_response_time > 500 %}bg-danger{% else %}bg-success{% endif %}">
+      <div class="card-body">
+        <div class="card-title h4">{% if property.avg_response_time > 500 %}Unhealthy{% else %}Ok{% endif %}</div>
+        <div class="card-text text-truncate small">Response time</div>
       </div>
     </div>
   </div>
@@ -90,9 +109,28 @@
 
 <div class="container mt-4">
   <div class="row">
+    <div class="col-12 col-md-8">
+      <div class="row">
+        <div class="col-12">
+          <div class="bg-light mb-4 p-2 rounded">
+            <canvas id="chart-response-times"></canvas>
+          </div>
+        </div>
+        <div class="col-12 col-md-6">
+          <div class="bg-light mb-4 p-2 rounded">
+            <canvas id="chart-status-codes"></canvas>
+          </div>
+        </div>
+        <div class="col-12 col-md-6">
+          <div class="bg-light mb-4 p-2 rounded">
+            <canvas id="chart-uptime"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="col-12 col-md-4">
-      <ul class="list-group">
-        <li class="list-group-item">
+      <ul class="list-group mb-4">
+        <li class="list-group-item bg-dark text-white">
           <strong>Security</strong>
         </li>
         <li class="list-group-item d-flex justify-content-between">
@@ -128,16 +166,6 @@
           <span class="badge {% if property.has_hsts_preload %}bg-success{% else %}bg-danger{% endif %}">{{ property.has_hsts_preload }}</span>
         </li>
       </ul>
-    </div>
-    <div class="col-12 col-md-4">
-      <div class="bg-light mb-4 p-2 rounded">
-        <canvas id="chart-status-codes"></canvas>
-      </div>
-    </div>
-    <div class="col-12 col-md-4">
-      <div class="bg-light mb-4 p-2 rounded">
-        <canvas id="chart-uptime"></canvas>
-      </div>
     </div>
   </div>
 </div>
