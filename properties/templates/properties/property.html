@@ -22,21 +22,23 @@
 
 
 {% block main %}
-<div class="bg-light py-2">
+<div class="bg-dark text-white py-2">
   <div class="container">
     <div class="row">
-      <div class="col">
+      <div class="col-12 col-lg-5">
         <div class="d-flex align-items-center">
-          <h1 class="me-3 display-5">{{ title }}</h1>
+          <h1 class="me-3 display-5 text-truncate">{{ title }}</h1>
         </div>
+      </div>
+      <div class="col-12 col-lg-7 d-flex align-items-center justify-content-lg-end">
         <div class="d-lg-flex my-lg-0 d-print-none">
           {% if user.is_authenticated %}
-          <form id="is-public-form" method="POST">
+          <form id="is-public-form" method="POST" class="d-flex align-items-center">
             {% csrf_token %}
             <div class="form-check form-switch my-1">
               <input class="form-check-input" type="checkbox" role="switch" name="is_public" id="is-public-switch" {% if property.is_public %}checked{% endif %}>
               <label class="form-check-label" for="{{ custom_event.event|slugify }}-switch">
-                <span class="badge bg-dark rounded-pill" data-bs-placement="bottom" data-bs-toggle="tooltip" title="Anyone with the URL will have access to this property, you can disable at anytime.">?</span>
+                <span class="badge bg-warning text-dark rounded-pill" data-bs-placement="bottom" data-bs-toggle="tooltip" title="Anyone with the URL will have access to this property, you can disable at anytime.">?</span>
                 Public Property
               </label>
             </div>
@@ -46,7 +48,7 @@
           <a href="{% url 'property' property.id %}?report" target="_blank" class="btn btn-sm btn-primary ms-0 ms-lg-3 my-1">
             Generate report
           </a>
-          <a href="{{ property.url }}?utm_source=status&utm_medium=property&utm_campaign={% now 'Y' %}" target="_blank" class="btn btn-sm btn-primary ms-0 ms-lg-3 my-1">
+          <a href="{{ property.url }}?utm_source=status.bythewood.me" target="_blank" class="btn btn-sm btn-primary ms-0 ms-lg-3 my-1">
             View site
           </a>
           {% endif %}
