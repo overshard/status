@@ -1,7 +1,7 @@
 {
   "private": true,
   "scripts": {
-    "start": "concurrently --raw yarn:manage:runserver yarn:manage:scheduler yarn:webpack:development",
+    "start": "concurrently --raw yarn:manage:runserver yarn:webpack:development",
     "manage:scheduler": "pipenv run python manage.py scheduler",
     "manage:runserver": "pipenv run python manage.py runserver",
     "manage:makemigrations": "pipenv run python manage.py makemigrations",
