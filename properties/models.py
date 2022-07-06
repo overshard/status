@@ -123,7 +123,7 @@ class AlertsMixin:
     def send_alerts(self):
         # if the past two checks were != 200 send alerts
         checks = self.statuses.order_by("-created_at")[:2]
-        if checks[0].status_code != 200 or checks[1].status_code != 200:
+        if checks[0].status_code != 200 and checks[1].status_code != 200:
             self.send_email()
             self.send_discord_message()
 
