@@ -6,4 +6,5 @@
   background-repeat: no-repeat;
   overflow: hidden;
   height: calc(100vh - 50px);
+  max-height: 1080px;
 }
