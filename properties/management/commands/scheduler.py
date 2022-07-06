@@ -36,7 +36,9 @@ class Command(BaseCommand):
             properties = [p.id for p in properties]
             db.connections.close_all()
             for p_id in properties:
-                threading.Thread(target=self.thread_target, args=(p_id,)).start()
+                t = threading.Thread(target=self.thread_target, args=(p_id,))
+                t.daemon = True
+                t.start()
 
             self.clean_checks()
 
