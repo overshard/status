@@ -8,8 +8,4 @@
     <loc>{{BASE_URL}}/changelog/</loc>
     <lastmod>2022-06-18</lastmod>
   </url>
-  <url>
-    <loc>{{BASE_URL}}/contact/</loc>
-    <lastmod>2022-06-18</lastmod>
-  </url>
 </urlset>

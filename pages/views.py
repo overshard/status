@@ -38,13 +38,6 @@ def changelog(request):
     return render(request, 'pages/changelog.html', context)
 
 
-def contact(request):
-    context = {}
-    context['title'] = 'Contact'
-    context['description'] = 'Contact me if you would like to chat.'
-    return render(request, 'pages/contact.html', context)
-
-
 def favicon(request):
     icon = "🚀"
     svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="80" font-size="80">{icon}</text></svg>'
