@@ -44,6 +44,15 @@ look up any Django tutorial on how to run Django, you shouldn't have a problem
 getting this project running on almost anything.
 
 
+## Running locally
+
+If you have all of the above dependencies installed you can use my Makefile to
+run and install python and node dependencies locally. Running `make` will check
+that you have the proper dependencies installed and if not it will try and
+install them for you. It will then create you a fresh database and run
+everything.
+
+
 ## Checking outdated dependencies
 
 This can be done in both yarn and pipenv with the following two commands:
@@ -64,7 +73,7 @@ I recommend testing everything after this to make sure it's all working.
 My development system runs Ubuntu so I installed the official webp utils from
 Google with `apt install webp`.
 
-    cwebp -q 85 -m 6 -o /path/to/image.webp /path/to/image.png
+    cwebp -q 90 -m 6 -o output.webp input.png
 
 
 ## Using docker-compose

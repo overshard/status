@@ -1,19 +1,5 @@
 {
   "private": true,
-  "scripts": {
-    "start": "concurrently --raw yarn:manage:runserver yarn:webpack:development",
-    "manage:scheduler": "pipenv run python manage.py scheduler",
-    "manage:runserver": "pipenv run python manage.py runserver",
-    "manage:makemigrations": "pipenv run python manage.py makemigrations",
-    "manage:migrate": "pipenv run python manage.py migrate",
-    "manage:createsuperuser": "pipenv run python manage.py createsuperuser",
-    "webpack:development": "nodemon --watch webpack.config.js --exec 'webpack --config webpack.config.js --mode development --watch --devtool source-map'",
-    "webpack:production": "webpack --config webpack.config.js --mode production",
-    "pull:db": "scp `git config --get remote.origin.url | cut -d ':' -f 1`:/srv/data/status/db/db.sqlite3 .",
-    "pull:media": "scp -r `git config --get remote.origin.url | cut -d ':' -f 1`:/srv/data/status/media .",
-    "format": "concurrently --raw yarn:format:python",
-    "format:python": "pipenv run black --exclude '/(\\.venv|\\.git|migrations|node_modules)/' ."
-  },
   "dependencies": {
     "@popperjs/core": "^2.11.5",
     "bootstrap": "^5.1.3",
@@ -26,7 +12,6 @@
   "devDependencies": {
     "browser-sync": "^2.27.10",
     "browser-sync-webpack-plugin": "^2.3.0",
-    "concurrently": "^7.1.0",
     "css-loader": "^6.7.1",
     "css-minimizer-webpack-plugin": "^4.0.0",
     "eslint": "^8.15.0",

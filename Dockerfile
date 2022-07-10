@@ -27,7 +27,7 @@ RUN yarn install && pipenv install --system
 
 COPY . .
 
-RUN yarn webpack:production && \
+RUN webpack --config webpack.config.js --mode production && \
     rm -rf node_modules && \
     python3 manage.py collectstatic --noinput
 
