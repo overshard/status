@@ -1,5 +1,5 @@
-import uuid
 import re
+import uuid
 
 import requests
 from django.contrib.auth import get_user_model
@@ -7,6 +7,7 @@ from django.core.mail import EmailMessage
 from django.db import models
 from django.template.loader import render_to_string
 from django.utils import timezone
+from django.utils.functional import cached_property
 
 User = get_user_model()
 
@@ -239,7 +240,7 @@ class Property(AlertsMixin, SecurityMixin, models.Model):
     def total_checks(self):
         return self.statuses.count()
 
-    @property
+    @cached_property
     def current_status(self):
         try:
             return self.statuses.latest("created_at").status_code
@@ -257,7 +258,7 @@ class Property(AlertsMixin, SecurityMixin, models.Model):
         except TypeError:
             return 0
 
-    @property
+    @cached_property
     def latest_headers(self):
         try:
             # return all headers lowercase to make them easier to use
