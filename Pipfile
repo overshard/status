@@ -10,7 +10,6 @@ requests = "*"
 tzdata = "*"  # Fixes "zoneinfo._common.ZoneInfoNotFoundError" on docker server
 uvicorn = "*"
 whitenoise = "*"
-psycopg2 = "*"
 
 [dev-packages]
 black = "*"
