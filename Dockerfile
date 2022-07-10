@@ -1,16 +1,6 @@
-# A dockerfile to run an status server
-#
-# Status can run very simply as long as we have a few basics:
-# - python w/ pipenv
-# - node w/ yarn
-# - sqlite3
-# - chromium
-
-
 FROM alpine:3.16
 
 RUN apk add --update --no-cache \
-      build-base python3-dev postgresql-dev \
       python3 py3-pip \
       nodejs yarn \
       chromium libstdc++ nss harfbuzz freetype font-noto font-noto-extra font-noto-emoji && \
