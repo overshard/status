@@ -10,7 +10,6 @@ def profile(request):
         if form.is_valid():
             form.save()
             messages.success(request, "Your profile was successfully updated!")
-            return render(request, "accounts/profile.html", {"form": form})
     else:
         form = UserForm(instance=request.user)
     return render(
