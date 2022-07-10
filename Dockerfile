@@ -12,7 +12,7 @@ FROM alpine:3.16
 RUN apk add --update --no-cache \
       build-base python3-dev postgresql-dev \
       python3 py3-pip \
-      nodejs npm yarn \
+      nodejs yarn \
       chromium libstdc++ nss harfbuzz freetype font-noto font-noto-extra font-noto-emoji && \
     pip install --upgrade pipenv
 
@@ -27,7 +27,7 @@ RUN yarn install && pipenv install --system
 
 COPY . .
 
-RUN npx webpack --config webpack.config.js --mode production && \
+RUN yarn build && \
     rm -rf node_modules && \
     python3 manage.py collectstatic --noinput
 
