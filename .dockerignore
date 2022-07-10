@@ -9,6 +9,7 @@ db.sqlite3
 docker-compose.yml
 Dockerfile
 LICENSE.md
+Makefile
 node_modules
 README.md
 samplefiles

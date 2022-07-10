@@ -70,7 +70,7 @@ pull:
 	@echo "pull ---------------------------------------------------------------"
 	git pull
 	rsync -avz $(SERVER_URL):/srv/data/status/db/db.sqlite3 db.sqlite3
-	rsync -avz $(SERVER_URL):/srv/data/status/media media
+	rsync -avz $(SERVER_URL):/srv/data/status/media/ media
 	@echo "> all files copied"
 
 
