@@ -16,7 +16,7 @@ services:
     command: >
       gunicorn status.asgi:application --workers 2 --max-requests 256
       --timeout 30 --bind :${PORT} --worker-class uvicorn.workers.UvicornWorker
-      --log-file -
+      --error-logfile - --access-logfile -
     restart: unless-stopped
   worker:
     container_name: status_worker
