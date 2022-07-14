@@ -125,8 +125,14 @@ def property(request, property_id):
     uptime = property_obj.statuses.filter(status_code=200).count()
     downtime = property_obj.statuses.exclude(status_code=200).count()
     total = uptime + downtime
-    uptime_pct = round(uptime / total * 100, 2)
-    downtime_pct = round(downtime / total * 100, 2)
+    try:
+        uptime_pct = round(uptime / total * 100, 2)
+    except ZeroDivisionError:
+        uptime_pct = 0
+    try:
+        downtime_pct = round(downtime / total * 100, 2)
+    except ZeroDivisionError:
+        downtime_pct = 0
     context["uptime_graph"] = [
         {"label": "Uptime", "count": uptime_pct},
         {"label": "Downtime", "count": downtime_pct},
