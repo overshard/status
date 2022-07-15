@@ -9,6 +9,8 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.functional import cached_property
 
+from status.lighthouse import fetch_lighthouse_results, parse_lighthouse_results
+
 User = get_user_model()
 
 
@@ -154,6 +156,10 @@ class Property(AlertsMixin, SecurityMixin, models.Model):
     last_run_at = models.DateTimeField(blank=True, null=True)
     next_run_at = models.DateTimeField(blank=True, null=True)
 
+    lighthouse_scores = models.JSONField(blank=True, null=True)
+    last_lighthouse_run_at = models.DateTimeField(blank=True, null=True)
+    next_lighthouse_run_at = models.DateTimeField(blank=True, null=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -236,6 +242,35 @@ class Property(AlertsMixin, SecurityMixin, models.Model):
         if check.status_code != 200:
             self.send_alerts()
 
+    def get_next_run_at_lighthouse(self):
+        """
+        Should check daily.
+        """
+        return timezone.now() + timezone.timedelta(days=1)
+
+    def should_check_lighthouse(self):
+        now = timezone.now()
+        if self.lighthouse_scores is None:
+            return True
+        if self.last_lighthouse_run_at is None:
+            return True
+        if self.next_lighthouse_run_at is None:
+            return True
+        return self.next_lighthouse_run_at <= now
+
+    def process_check_lighthouse(self):
+        self.run_check_lighthouse()
+
+    def run_check_lighthouse(self):
+        try:
+            results = fetch_lighthouse_results(self.url)
+            scores = parse_lighthouse_results(results)
+            if scores:
+                self.lighthouse_scores = scores
+                self.save(update_fields=["lighthouse_scores"])
+        except Exception:
+            pass
+
     @property
     def total_checks(self):
         return self.statuses.count()
@@ -268,6 +303,11 @@ class Property(AlertsMixin, SecurityMixin, models.Model):
         except Check.DoesNotExist:
             return {}
 
+    @cached_property
+    def avg_lighthouse_score(self):
+        if self.lighthouse_scores:
+            scores = [score for score in self.lighthouse_scores.values()]
+            return round(sum(scores) / len(scores))
 
 class Check(models.Model):
     property = models.ForeignKey(

@@ -29,13 +29,3 @@ class User(AbstractUser):
         for property in self.properties.all():
             total_properties_down += property.current_status != 200
         return total_properties_down
-
-    @property
-    def avg_response_time(self):
-        avg_response_times = []
-        for property in self.properties.all():
-            avg_response_times.append(property.avg_response_time)
-        try:
-            return int(sum(avg_response_times) / len(avg_response_times))
-        except ZeroDivisionError:
-            return 0

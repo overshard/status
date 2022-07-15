@@ -96,12 +96,6 @@
           </div>
           <div class="col-6 col-md-2 d-flex align-items-center">
             <div class="card-body py-1">
-              <div class="card-title h3 mb-0">{{ user.avg_response_time }}</div>
-              <p class="card-text">Avg. response time</p>
-            </div>
-          </div>
-          <div class="col-6 col-md-2 d-flex align-items-center">
-            <div class="card-body py-1">
               <div class="card-title h3 mb-0">{{ user.total_checks }}</div>
               <p class="card-text">Total checks</p>
             </div>
@@ -121,7 +115,7 @@
                     Delete
                   </button>
                 </div>
-                <div class="modal fade" id="delete-modal-{{ property.id }}" tabindex="-1" aria-labelledby="delete-modal-{{ property.id }}-label" aria-hidden="true">
+                <div class="modal fade text-dark" id="delete-modal-{{ property.id }}" tabindex="-1" aria-labelledby="delete-modal-{{ property.id }}-label" aria-hidden="true">
                   <div class="modal-dialog">
                     <div class="modal-content">
                       <div class="modal-header">
@@ -159,10 +153,16 @@
                 <div class="card-text text-truncate small">Security</div>
               </div>
             </div>
-            <div class="col-6 col-md-2 d-none d-md-flex d-flex align-items-center text-white {% if property.avg_response_time > 500 %}bg-danger{% else %}bg-success{% endif %}">
+            <div class="col-6 col-md-2 d-none d-md-flex d-flex align-items-center text-white {% if property.avg_lighthouse_score < 70 %}bg-warning{% else %}bg-success{% endif %}">
               <div class="card-body">
-                <div class="card-title h4">{% if property.avg_response_time > 500 %}Unhealthy{% else %}Ok{% endif %}</div>
-                <div class="card-text text-truncate small">Response time</div>
+                <div class="card-title h4">
+                  {% if property.avg_lighthouse_score %}
+                    {{ property.avg_lighthouse_score }}%
+                  {% else %}
+                    Checking...
+                  {% endif %}
+                </div>
+                <div class="card-text text-truncate small">Avg. LH score</div>
               </div>
             </div>
           </div>

@@ -11,9 +11,10 @@ def fetch_lighthouse_results(url):
     command = [
         f"{settings.BASE_DIR}/node_modules/.bin/lighthouse",
         url,
-        '--chrome-flags="--headless --no-sandbox"',
+        '--chrome-flags="--headless --no-sandbox --disable-dev-shm-usage"',
         '--output="json"',
         '--output-path="stdout"',
+        '--max-wait-for-load=5000',
         "--quiet",
     ]
     try:
@@ -26,10 +27,10 @@ def fetch_lighthouse_results(url):
 def parse_lighthouse_results(results):
     try:
         scores = {
-            "performance": results["categories"]["performance"]["score"],
-            "accessibility": results["categories"]["accessibility"]["score"],
-            "best-practices": results["categories"]["best-practices"]["score"],
-            "seo": results["categories"]["seo"]["score"],
+            "Performance": results["categories"]["performance"]["score"],
+            "Accessibility": results["categories"]["accessibility"]["score"],
+            "Best practices": results["categories"]["best-practices"]["score"],
+            "SEO": results["categories"]["seo"]["score"],
         }
     except KeyError:
         return None
