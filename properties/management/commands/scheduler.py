@@ -49,21 +49,21 @@ class Command(BaseCommand):
 
             self.clean_checks()
 
-            # Do our daily lighthouse checks
-            # Only run 1 of these checks per loop to avoid overloading the server
-            properties = [p for p in Property.objects.all() if p.should_check_lighthouse()]
-            properties = properties[:1]
-            for p in properties:
-                p.next_lighthouse_run_at = p.get_next_run_at_lighthouse()
-                p.last_lighthouse_run_at = timezone.now()
-                p.save(update_fields=["next_lighthouse_run_at", "last_lighthouse_run_at"])
+            # # Do our daily lighthouse checks
+            # # Only run 1 of these checks per loop to avoid overloading the server
+            # properties = [p for p in Property.objects.all() if p.should_check_lighthouse()]
+            # properties = properties[:1]
+            # for p in properties:
+            #     p.next_lighthouse_run_at = p.get_next_run_at_lighthouse()
+            #     p.last_lighthouse_run_at = timezone.now()
+            #     p.save(update_fields=["next_lighthouse_run_at", "last_lighthouse_run_at"])
 
-            properties = [p.id for p in properties]
-            db.connections.close_all()
-            for p_id in properties:
-                t = threading.Thread(target=self.thread_target_lighthouse, args=(p_id,))
-                t.daemon = True
-                t.start()
+            # properties = [p.id for p in properties]
+            # db.connections.close_all()
+            # for p_id in properties:
+            #     t = threading.Thread(target=self.thread_target_lighthouse, args=(p_id,))
+            #     t.daemon = True
+            #     t.start()
 
             self.stdout.write("[Scheduler] Sleeping scheduler for 10 seconds...")
             try:
