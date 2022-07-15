@@ -32,7 +32,9 @@ class Command(BaseCommand):
 
         while True:
             # Do our standard checks
+            # Only run 10 at a time
             properties = [p for p in Property.objects.all() if p.should_check()]
+            properties = properties[:10]
             for p in properties:
                 p.next_run_at = p.get_next_run_at()
                 p.last_run_at = timezone.now()
@@ -63,9 +65,9 @@ class Command(BaseCommand):
                 t.daemon = True
                 t.start()
 
-            self.stdout.write("[Scheduler] Sleeping scheduler for 30 seconds...")
+            self.stdout.write("[Scheduler] Sleeping scheduler for 10 seconds...")
             try:
-                time.sleep(30)
+                time.sleep(10)
             except KeyboardInterrupt:
                 self.stdout.write("[Scheduler] Stopping scheduler...")
                 break
