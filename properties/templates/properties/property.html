@@ -113,7 +113,7 @@
 <div class="container-fluid">
   <div class="row mb-4">
     {% for category, score in property.lighthouse_scores.items %}
-    <div class="col-6 col-md-3 d-flex align-items-center text-white {% if score > 70 %}bg-success{% else %}bg-warning{% endif %}">
+    <div class="col-6 col-md-3 d-flex align-items-center text-white {% if score >= 80 %}bg-success{% else %}bg-warning{% endif %}">
       <div class="card-body text-center">
         <div class="card-title h4">{{ score }}%</div>
         <div class="card-text text-truncate small">{{ category }}</div>
