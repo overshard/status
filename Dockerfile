@@ -1,5 +1,7 @@
 FROM alpine:3.16
 
+ENV LANG "C.UTF-8"
+
 RUN apk add --update --no-cache \
       python3 py3-pip \
       nodejs yarn \
