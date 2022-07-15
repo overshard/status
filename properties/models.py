@@ -250,8 +250,6 @@ class Property(AlertsMixin, SecurityMixin, models.Model):
 
     def should_check_lighthouse(self):
         now = timezone.now()
-        if self.lighthouse_scores is None:
-            return True
         if self.last_lighthouse_run_at is None:
             return True
         if self.next_lighthouse_run_at is None:
