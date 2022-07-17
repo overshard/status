@@ -27,3 +27,4 @@ services:
     command: >
       python3 manage.py scheduler
     restart: unless-stopped
+    init: true
