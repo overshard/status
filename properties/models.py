@@ -167,6 +167,11 @@ class Property(AlertsMixin, SecurityMixin, models.Model):
         verbose_name = "Property"
         verbose_name_plural = "Properties"
 
+        indexes = [
+            models.Index(fields=["url"]),
+            models.Index(fields=["user"]),
+        ]
+
     def __str__(self):
         return self.url
 
