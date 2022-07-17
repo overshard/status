@@ -1,0 +1,36 @@
+@media print {
+  @page {
+    size: A4;
+  }
+
+  html, body {
+    width: fit-content;
+    height: fit-content;
+  }
+
+  .container {
+    max-width: 100%;
+  }
+
+  #chart-response-times {
+    height: 300px;
+    page-break-after: always;
+  }
+
+  #doughnut-graphs {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+    page-break-after: always;
+  }
+
+  #doughnut-graphs > div {
+    width: 50%;
+    margin-bottom: 0;
+  }
+
+  .col-sm-6 {
+    width: 50%;
+  }
+}

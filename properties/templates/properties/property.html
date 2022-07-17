@@ -10,6 +10,11 @@
 {% endblock %}
 
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'properties.css' %}">
+{% endblock %}
+
+
 {% block breadcrumbs %}
 <nav style="--bs-breadcrumb-divider: url(&#34;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='%236c757d'/%3E%3C/svg%3E&#34;);" aria-label="breadcrumb">
   <ol class="breadcrumb mb-0">
@@ -94,13 +99,13 @@
         <div class="card-text text-truncate small">Certificate</div>
       </div>
     </div>
-    <div class="col-6 col-md-3 d-none d-md-flex d-flex align-items-center text-white {% if not property.has_security_issue %}bg-success{% else %}bg-danger{% endif %}">
+    <div class="col-6 col-md-3 d-flex align-items-center text-white {% if not property.has_security_issue %}bg-success{% else %}bg-danger{% endif %}">
       <div class="card-body text-center">
         <div class="card-title h4">{% if not property.has_security_issue %}Ok{% else %}Failed{% endif %}</div>
         <div class="card-text text-truncate small">Security</div>
       </div>
     </div>
-    <div class="col-6 col-md-3 d-none d-md-flex d-flex align-items-center text-white {% if property.avg_response_time > 500 %}bg-danger{% else %}bg-success{% endif %}">
+    <div class="col-6 col-md-3 d-flex align-items-center text-white {% if property.avg_response_time > 500 %}bg-danger{% else %}bg-success{% endif %}">
       <div class="card-body text-center">
         <div class="card-title h4">{% if property.avg_response_time > 500 %}Unhealthy{% else %}Ok{% endif %}</div>
         <div class="card-text text-truncate small">Response time</div>
@@ -130,9 +135,11 @@
       <div class="row">
         <div class="col-12">
           <div class="bg-light mb-4 p-2 rounded">
-            <canvas id="chart-response-times"></canvas>
+            <canvas id="chart-response-times" height="300" width="100%"></canvas>
           </div>
         </div>
+      </div>
+      <div class="row" id="doughnut-graphs">
         <div class="col-12 col-md-6">
           <div class="bg-light mb-4 p-2 rounded">
             <canvas id="chart-status-codes"></canvas>

@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }),
       datasets: [
         {
-          label: "Response times",
+          label: "Response times (ms)",
           data: data.map((d) => d.count),
           backgroundColor: "rgba(13, 110, 253, 0.4)",
           borderColor: "rgba(13, 110, 253, 0.8)",
@@ -43,6 +43,9 @@ document.addEventListener("DOMContentLoaded", function () {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      animation: {
+        duration: 0,
+      },
       plugins: {
         tooltip: {
           mode: "index",
@@ -64,12 +67,11 @@ document.addEventListener("DOMContentLoaded", function () {
         xAxes: {
           ticks: {
             autoSkip: true,
-            maxTicksLimit: 10,
             font: {
               size: 12,
               family: fontStack,
             },
-            maxRotation: 0,
+            maxRotation: 25,
           },
         },
         yAxes: {
@@ -79,6 +81,9 @@ document.addEventListener("DOMContentLoaded", function () {
               size: 12,
               family: fontStack,
             },
+            callback: function(value, index, ticks) {
+              return `${value} ms`;
+            }
           },
         },
       },
@@ -111,6 +116,9 @@ document.addEventListener("DOMContentLoaded", function () {
     options: {
       responsive: true,
       aspectRatio: 2,
+      animation: {
+        animateRotate: false,
+      },
       plugins: {
         legend: {
           position: "right",
@@ -151,6 +159,9 @@ document.addEventListener("DOMContentLoaded", function () {
     options: {
       responsive: true,
       aspectRatio: 2,
+      animation: {
+        animateRotate: false,
+      },
       plugins: {
         legend: {
           position: "right",
