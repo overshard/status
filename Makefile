@@ -69,7 +69,7 @@ db.sqlite3:
 
 push:
 	@echo "push ---------------------------------------------------------------"
-	git remote | xargs -L1 -I R git push R master
+	git remote | xargs -I R git push R master
 
 pull:
 	@echo "pull ---------------------------------------------------------------"
