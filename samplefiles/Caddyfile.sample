@@ -5,15 +5,30 @@
 # Caddy too but I've honestly been too lazy to implement that. I just use
 # whitenoise on Django for that.
 
+{
+  servers {
+    protocol {
+      experimental_http3
+    }
+  }
+}
+
 (common) {
-  header /* {
-    X-XSS-Protection "1; mode=block"
-    X-Content-Type-Options nosniff
-    -Server
+  header /static/* {
+    Cache-Control "public, max-age=315360000"
   }
 
   header /media/* {
     Cache-Control "public, max-age=315360000"
+  }
+
+  header /* {
+    Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    X-XSS-Protection "1; mode=block"
+    X-Frame-Options DENY
+    X-Content-Type-Options nosniff
+    -Server
+    -X-Powered-By
   }
 
   encode zstd gzip
