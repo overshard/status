@@ -1,8 +1,8 @@
 # Django + Webpack Makefile
-# v. 2022.07.13
+# v. 2022.07.22
 
 
-.PHONY: run runserver webpack check clean push pull update
+.PHONY: run runserver webpack check clean push pull update scheduler
 .DEFAULT: run
 
 
@@ -14,7 +14,7 @@ PROJECT_NAME = $(shell basename $(PWD))
 
 run: check install
 	@echo "run ----------------------------------------------------------------"
-	${MAKE} -j2 runserver webpack
+	${MAKE} -j2 runserver webpack scheduler
 
 runserver:
 	pipenv run python manage.py runserver
@@ -22,6 +22,9 @@ runserver:
 webpack:
 	npx nodemon --watch webpack.config.js --exec \
 		'webpack --config webpack.config.js --mode development --watch --devtool source-map'
+
+scheduler:
+	pipenv run python manage.py scheduler
 
 
 check:
