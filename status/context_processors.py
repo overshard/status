@@ -1,7 +1,5 @@
 from django.conf import settings
 
-from properties.models import Property
-
 
 def canonical(request):
     """
