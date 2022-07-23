@@ -11,6 +11,7 @@ tzdata = "*"  # Fixes "zoneinfo._common.ZoneInfoNotFoundError" on docker server
 uvicorn = "*"
 whitenoise = "*"
 scrapy = "*"
+w3lib = "*"
 
 [dev-packages]
 black = "*"

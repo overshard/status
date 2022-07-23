@@ -1,5 +1,12 @@
-from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import CrawlSpider, Rule
+from w3lib.url import url_query_cleaner
+
+
+def process_links(links):
+    for link in links:
+        link.url = url_query_cleaner(link.url)
+        yield link
 
 
 class SEOSpider(CrawlSpider):
@@ -22,6 +29,7 @@ class SEOSpider(CrawlSpider):
             LinkExtractor(),
             callback='parse_local',
             follow=True,
+            process_links=process_links,
         ),
     )
 
