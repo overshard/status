@@ -141,18 +141,20 @@
                 <div class="card-text text-truncate small">Current status</div>
               </div>
             </div>
-            <div class="col-6 col-md-2 d-flex align-items-center text-white {% if not property.invalid_cert %}bg-success{% else %}bg-danger{% endif %}">
-              <div class="card-body">
-                <div class="card-title h4">{% if not property.invalid_cert %}Ok{% else %}Unhealthy{% endif %}</div>
-                <div class="card-text text-truncate small">Certificate</div>
-              </div>
-            </div>
             <div class="col-6 col-md-2 d-none d-md-flex d-flex align-items-center text-white {% if not property.has_security_issue %}bg-success{% else %}bg-danger{% endif %}">
               <div class="card-body">
                 <div class="card-title h4">{% if not property.has_security_issue %}Ok{% else %}Failed{% endif %}</div>
                 <div class="card-text text-truncate small">Security</div>
               </div>
             </div>
+            {% with property.crawler_insights|length as insights %}
+            <div class="col-6 col-md-2 d-flex align-items-center text-white {% if insights > 100 %}bg-danger{% elif insights > 25 %}bg-warning{% else %}bg-success{% endif %}">
+              <div class="card-body">
+                <div class="card-title h4">{{ insights }}</div>
+                <div class="card-text text-truncate small">Crawler issues</div>
+              </div>
+            </div>
+            {% endwith %}
             <div class="col-6 col-md-2 d-none d-md-flex d-flex align-items-center text-white {% if property.avg_lighthouse_score < 80 %}bg-warning{% else %}bg-success{% endif %}">
               <div class="card-body">
                 <div class="card-title h4">

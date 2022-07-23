@@ -10,6 +10,7 @@ from properties.models import Property, Check
 
 
 q = queue.Queue()
+q_status = queue.Queue()
 
 
 class Command(BaseCommand):
@@ -31,24 +32,27 @@ class Command(BaseCommand):
         self.stdout.write("[Scheduler] Checking lighthouse {}".format(property.url))
         property.process_check_lighthouse()
 
-    def queue_add(self, property_id, lighthouse=False):
-        q.put((property_id, lighthouse))
+    def thread_target_crawler(self, property_id):
+        property = Property.objects.get(id=property_id)
+        self.stdout.write("[Scheduler] Checking crawler {}".format(property.url))
+        property.crawl_site()
+
+    def queue_add(self, property_id, property_type):
+        q.put((property_id, property_type))
+
+    def queue_add_status(self, property_id, property_type):
+        q_status.put((property_id, property_type))
 
     def queue_process(self):
         while True:
-            """
-            Use 2 threads to process each item in the queue. If lighthouse == False
-            then use thread_target in the thread_target function. If lighthouse == True
-            then use thread_target_lighthouse in the thread_target_lighthouse function.
-            """
             if not q.empty():
                 threads = []
                 for i in range(2):
                     q_data = q.get()
-                    if q_data[1]:
+                    if q_data[1] == "lighthouse":
                         t = threading.Thread(target=self.thread_target_lighthouse, args=(q_data[0],))
-                    else:
-                        t = threading.Thread(target=self.thread_target, args=(q_data[0],))
+                    elif q_data[1] == "crawler":
+                        t = threading.Thread(target=self.thread_target_crawler, args=(q_data[0],))
                     t.daemon = True
                     t.start()
                     threads.append(t)
@@ -56,6 +60,58 @@ class Command(BaseCommand):
                     t.join()
                     q.task_done()
             time.sleep(1)
+
+    def queue_process_status(self):
+        while True:
+            if not q_status.empty():
+                threads = []
+                for i in range(2):
+                    q_data = q_status.get()
+                    if q_data[1] == "status":
+                        t = threading.Thread(target=self.thread_target, args=(q_data[0],))
+                    t.daemon = True
+                    t.start()
+                    threads.append(t)
+                for t in threads:
+                    t.join()
+                    q_status.task_done()
+            time.sleep(1)
+
+    def queue_check_status(self):
+        properties = [p for p in Property.objects.all() if p.should_check()]
+        for p in properties:
+            p.next_run_at = p.get_next_run_at()
+            p.last_run_at = timezone.now()
+            p.save(update_fields=["next_run_at", "last_run_at"])
+
+        properties = [p.id for p in properties]
+        db.connections.close_all()
+        for p_id in properties:
+            self.queue_add_status(p_id, "status")
+
+    def queue_check_lighthouse(self):
+        properties = [p for p in Property.objects.all() if p.should_check_lighthouse()]
+        for p in properties:
+            p.next_lighthouse_run_at = p.get_next_run_at_lighthouse()
+            p.last_lighthouse_run_at = timezone.now()
+            p.save(update_fields=["next_lighthouse_run_at", "last_lighthouse_run_at"])
+
+        properties = [p.id for p in properties]
+        db.connections.close_all()
+        for p_id in properties:
+            self.queue_add(p_id, "lighthouse")
+
+    def queue_check_crawler(self):
+        properties = [p for p in Property.objects.all() if p.should_check_crawl()]
+        for p in properties:
+            p.next_run_at_crawler = p.get_next_run_at_crawl()
+            p.last_run_at_crawler = timezone.now()
+            p.save(update_fields=["next_run_at_crawler", "last_run_at_crawler"])
+
+        properties = [p.id for p in properties]
+        db.connections.close_all()
+        for p_id in properties:
+            self.queue_add(p_id, "crawler")
 
     def handle(self, *args, **options):
         self.stdout.write("[Scheduler] Starting scheduler...")
@@ -65,35 +121,17 @@ class Command(BaseCommand):
         t.daemon = True
         t.start()
 
+        # Start queue_process thread
+        t = threading.Thread(target=self.queue_process_status)
+        t.daemon = True
+        t.start()
+
         # Start our loop to check properties every 30 seconds
         while True:
-            # Do our standard checks
-            # Only run 10 at a time
-            properties = [p for p in Property.objects.all() if p.should_check()]
-            for p in properties:
-                p.next_run_at = p.get_next_run_at()
-                p.last_run_at = timezone.now()
-                p.save(update_fields=["next_run_at", "last_run_at"])
-
-            properties = [p.id for p in properties]
-            db.connections.close_all()
-            for p_id in properties:
-                self.queue_add(p_id)
-
+            self.queue_check_status()
+            self.queue_check_lighthouse()
+            self.queue_check_crawler()
             self.clean_checks()
-
-            # Do our daily lighthouse checks
-            # Only run 1 of these checks per loop to avoid overloading the server
-            properties = [p for p in Property.objects.all() if p.should_check_lighthouse()]
-            for p in properties:
-                p.next_lighthouse_run_at = p.get_next_run_at_lighthouse()
-                p.last_lighthouse_run_at = timezone.now()
-                p.save(update_fields=["next_lighthouse_run_at", "last_lighthouse_run_at"])
-
-            properties = [p.id for p in properties]
-            db.connections.close_all()
-            for p_id in properties:
-                self.queue_add(p_id, True)
 
             self.stdout.write("[Scheduler] Sleeping scheduler for 30 seconds...")
             try:

@@ -7,3 +7,4 @@ db.sqlite3-journal
 media
 node_modules
 static
+crawler_output

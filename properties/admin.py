@@ -11,7 +11,6 @@ class PropertyAdmin(admin.ModelAdmin):
         "total_checks",
         "last_run_at",
         "next_run_at",
-        "run_interval",
         "should_check",
     )
     list_filter = ("user__username",)

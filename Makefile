@@ -14,7 +14,7 @@ PROJECT_NAME = $(shell basename $(PWD))
 
 run: check install
 	@echo "run ----------------------------------------------------------------"
-	${MAKE} -j2 runserver webpack scheduler
+	${MAKE} -j3 runserver webpack scheduler
 
 runserver:
 	pipenv run python manage.py runserver

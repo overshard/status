@@ -1,5 +1,8 @@
 import re
 import uuid
+import os
+import json
+import logging
 
 import requests
 from django.contrib.auth import get_user_model
@@ -8,8 +11,14 @@ from django.db import models
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.functional import cached_property
+from django.conf import settings
+from crawler.runner import run_seo_spider
 
 from status.lighthouse import fetch_lighthouse_results, parse_lighthouse_results
+
+
+logger = logging.getLogger(__name__)
+
 
 User = get_user_model()
 
@@ -131,20 +140,165 @@ class AlertsMixin:
             self.send_discord_message()
 
 
-class Property(AlertsMixin, SecurityMixin, models.Model):
-    """
-    A site that we attach all our status hits to and connect up to a user.
-    """
+class CrawlerMixin:
+    @cached_property
+    def get_crawl_output(self):
+        """
+        This will fetch crawler output in the JSON format from the folders:
 
-    RUN_INTERVAL_CHOICES = (
-        (60, "Every 1 minute"),
-        (180, "Every 3 minutes"),
-        (300, "Every 5 minutes"),
-        (900, "Every 15 minutes"),
-        (1800, "Every 30 minutes"),
-        (3600, "Every hour"),
-    )
+        - DEBUG == True: crawler_output/
+        - DEBUG == False: /data/crawler_output/
 
+        The filename in the folder is the site URL `self.url.split("/")[2] + ".json"`.
+
+        Need to parse every line individually to get the data.
+        """
+        if settings.DEBUG:
+            path = "crawler_output/"
+        else:
+            path = "/data/crawler_output/"
+
+        try:
+            with open(os.path.join(path, self.url.split("/")[2] + ".json")) as f:
+                data = []
+                for line in f:
+                    data.append(json.loads(line))
+                return data
+        except FileNotFoundError:
+            return []
+
+    def get_next_run_at_crawl(self):
+        """
+        Should check daily.
+        """
+        return timezone.now() + timezone.timedelta(days=1)
+
+    def should_check_crawl(self):
+        now = timezone.now()
+        if self.last_run_at_crawler is None:
+            return True
+        if self.next_run_at_crawler is None:
+            return True
+        return self.next_run_at_crawler <= now
+
+    def parse_page(self, page):
+        insights = []
+
+        # Make sure the content type is text/html else skip
+        if "text/html" not in page.get("content_type", ""):
+            return insights
+
+        # Make sure all pages have a title
+        if page['title'] == '':
+            logger.warning(f"Page {page['url']} has no title")
+            insights.append({
+                'url': page['url'],
+                'issue': 'Page has no title',
+                'type': 'seo',
+            })
+
+        # Make sure pages have a title between 30 and 60 characters
+        if len(page['title']) < 30 or len(page['title']) > 60:
+            logger.warning(f"Page {page['url']} has title of length {len(page['title'])}")
+            insights.append({
+                'url': page['url'],
+                'item': page['title'],
+                'issue': 'Page title is not between 30 and 60 characters',
+                'type': 'seo',
+            })
+
+        # Make sure pages have a unique title
+        if page['title'] in [p['title'] for p in self.get_crawl_output if p['url'] != page['url']]:
+            logger.warning(f"Page {page['url']} has duplicate title")
+            insights.append({
+                'url': page['url'],
+                'item': page['title'],
+                'issue': 'Page has duplicate title',
+                'type': 'seo',
+            })
+
+        # Make sure pages have a description
+        if page['description'] == '':
+            logger.warning(f"Page {page['url']} has no description")
+            insights.append({
+                'url': page['url'],
+                'issue': 'Page has no description',
+                'type': 'seo',
+            })
+
+        # Make sure pages have a description between 70 and 160 characters
+        if len(page['description']) < 70 or len(page['description']) > 160:
+            logger.warning(f"Page {page['url']} has description of length {len(page['description'])}")
+            insights.append({
+                'url': page['url'],
+                'item': page['description'],
+                'issue': 'Page description is not between 70 and 160 characters',
+                'type': 'seo',
+            })
+
+        # Make sure pages have a unique description
+        if page['description'] in [p['description'] for p in self.get_crawl_output if p['url'] != page['url']]:
+            logger.warning(f"Page {page['url']} has duplicate description")
+            insights.append({
+                'url': page['url'],
+                'item': page['description'],
+                'issue': 'Page has duplicate description',
+                'type': 'seo',
+            })
+
+        # Make sure pages have an h1
+        if page['h1'] == '':
+            logger.warning(f"Page {page['url']} has no h1")
+            insights.append({
+                'url': page['url'],
+                'issue': 'Page has no h1',
+                'type': 'seo',
+            })
+
+        # Make sure pages have an h1 between 20 and 70 characters
+        if len(page['h1']) < 20 or len(page['h1']) > 70:
+            logger.warning(f"Page {page['url']} has h1 of length {len(page['h1'])}")
+            insights.append({
+                'url': page['url'],
+                'item': page['h1'],
+                'issue': 'Page h1 is not between 20 and 70 characters',
+                'type': 'seo',
+            })
+
+        # Make sure pages have a unique h1
+        if page['h1'] in [p['h1'] for p in self.get_crawl_output if p['url'] != page['url']]:
+            logger.warning(f"Page {page['url']} has duplicate h1")
+            insights.append({
+                'url': page['url'],
+                'item': page['h1'],
+                'issue': 'Page has duplicate h1',
+                'type': 'seo',
+            })
+
+        # Make sure pages have a canonical url
+        if page['canonical'] == '':
+            logger.warning(f"Page {page['url']} has no canonical url")
+            insights.append({
+                'url': page['url'],
+                'issue': 'Page has no canonical url',
+                'type': 'seo',
+            })
+
+        return insights
+
+    def parse_crawl(self):
+        insights = []
+        for page in self.get_crawl_output:
+            insights.extend(self.parse_page(page))
+        self.crawler_insights = insights
+        self.save(update_fields=['crawler_insights'])
+
+    def crawl_site(self):
+        run_seo_spider(self.url)
+        self.parse_crawl()
+
+
+class Property(CrawlerMixin, AlertsMixin, SecurityMixin, models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="properties")
 
@@ -152,9 +306,12 @@ class Property(AlertsMixin, SecurityMixin, models.Model):
 
     is_public = models.BooleanField(default=False)
 
-    run_interval = models.IntegerField(choices=RUN_INTERVAL_CHOICES, default=180)
     last_run_at = models.DateTimeField(blank=True, null=True)
     next_run_at = models.DateTimeField(blank=True, null=True)
+
+    last_run_at_crawler = models.DateTimeField(blank=True, null=True)
+    next_run_at_crawler = models.DateTimeField(blank=True, null=True)
+    crawler_insights = models.JSONField(blank=True, null=True)
 
     lighthouse_scores = models.JSONField(blank=True, null=True)
     last_lighthouse_run_at = models.DateTimeField(blank=True, null=True)
@@ -180,35 +337,10 @@ class Property(AlertsMixin, SecurityMixin, models.Model):
         return self.url.split("/")[2].replace("www.", "")
 
     def get_next_run_at(self):
-        """
-        Returns the next run datetime. Should be in whole increments of the interval.
-        """
         now = timezone.now()
-        if self.run_interval == 60:
-            return now.replace(
-                minute=(now.minute // 1) * 1, second=0, microsecond=0
-            ) + timezone.timedelta(minutes=1)
-        elif self.run_interval == 180:
-            return now.replace(
-                minute=(now.minute // 3) * 3, second=0, microsecond=0
-            ) + timezone.timedelta(minutes=3)
-        elif self.run_interval == 300:
-            return now.replace(
-                minute=(now.minute // 5) * 5, second=0, microsecond=0
-            ) + timezone.timedelta(minutes=5)
-        elif self.run_interval == 900:
-            return now.replace(
-                minute=(now.minute // 15) * 15, second=0, microsecond=0
-            ) + timezone.timedelta(minutes=15)
-        elif self.run_interval == 1800:
-            return now.replace(
-                minute=(now.minute // 30) * 30, second=0, microsecond=0
-            ) + timezone.timedelta(minutes=30)
-        elif self.run_interval == 3600:
-            today = now.replace(minute=0, second=0, microsecond=0)
-            return today + timezone.timedelta(hours=1)
-        else:
-            raise ValueError("Invalid run interval")
+        return now.replace(
+            minute=(now.minute // 3) * 3, second=0, microsecond=0
+        ) + timezone.timedelta(minutes=3)
 
     def should_check(self):
         now = timezone.now()
@@ -311,6 +443,7 @@ class Property(AlertsMixin, SecurityMixin, models.Model):
         if self.lighthouse_scores:
             scores = [score for score in self.lighthouse_scores.values()]
             return round(sum(scores) / len(scores))
+
 
 class Check(models.Model):
     property = models.ForeignKey(

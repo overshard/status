@@ -88,25 +88,25 @@
 <div class="container-fluid">
   <div class="row {% if not property.lighthouse_scores %}mb-4{% endif %}">
     <div class="col-6 col-md-3 d-flex align-items-center text-white {% if property.current_status == 200 %}bg-success{% else %}bg-danger{% endif %}">
-      <div class="card-body text-center">
+      <div class="card-body text-center py-2">
         <div class="card-title h4">{% if property.current_status == 200 %}Ok{% else %}Failed{% endif %}</div>
         <div class="card-text text-truncate small">Current status</div>
       </div>
     </div>
     <div class="col-6 col-md-3 d-flex align-items-center text-white {% if not property.invalid_cert %}bg-success{% else %}bg-danger{% endif %}">
-      <div class="card-body text-center">
+      <div class="card-body text-center py-2">
         <div class="card-title h4">{% if not property.invalid_cert %}Ok{% else %}Unhealthy{% endif %}</div>
         <div class="card-text text-truncate small">Certificate</div>
       </div>
     </div>
     <div class="col-6 col-md-3 d-flex align-items-center text-white {% if not property.has_security_issue %}bg-success{% else %}bg-danger{% endif %}">
-      <div class="card-body text-center">
+      <div class="card-body text-center py-2">
         <div class="card-title h4">{% if not property.has_security_issue %}Ok{% else %}Failed{% endif %}</div>
         <div class="card-text text-truncate small">Security</div>
       </div>
     </div>
     <div class="col-6 col-md-3 d-flex align-items-center text-white {% if property.avg_response_time > 500 %}bg-danger{% else %}bg-success{% endif %}">
-      <div class="card-body text-center">
+      <div class="card-body text-center py-2">
         <div class="card-title h4">{% if property.avg_response_time > 500 %}Unhealthy{% else %}Ok{% endif %}</div>
         <div class="card-text text-truncate small">Response time</div>
       </div>
@@ -119,7 +119,7 @@
   <div class="row mb-4">
     {% for category, score in property.lighthouse_scores.items %}
     <div class="col-6 col-md-3 d-flex align-items-center text-white {% if score >= 80 %}bg-success{% else %}bg-warning{% endif %}">
-      <div class="card-body text-center">
+      <div class="card-body text-center py-2">
         <div class="card-title h4">{{ score }}%</div>
         <div class="card-text text-truncate small">{{ category }}</div>
       </div>
@@ -193,4 +193,41 @@
     </div>
   </div>
 </div>
+
+{% if property.crawler_insights %}
+<div class="container mt-4">
+  <div class="row bg-dark text-white py-2 rounded-top fw-bolder">
+    <div class="col-1">
+      Type
+    </div>
+    <div class="col-3">
+      URL
+    </div>
+    <div class="col-3">
+      Item
+    </div>
+    <div class="col-5">
+      Issue
+    </div>
+  </div>
+  {% for insight in property.crawler_insights|dictsort:"url" %}
+  <div class="row bg-light py-2 border-bottom">
+    <div class="col-md-1">
+      {{ insight.type|upper }}
+    </div>
+    <div class="col-md-3" style="word-wrap: break-word;">
+      <a href="{{ insight.url }}?utm_source=status.bythewood.me&utm_medium=insights" target="_blank">
+        {{ insight.url }}
+      </a>
+    </div>
+    <div class="col-md-3">
+      {{ insight.item }}
+    </div>
+    <div class="col-md-5">
+      {{ insight.issue }}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
 {% endblock %}
