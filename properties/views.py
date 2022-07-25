@@ -12,6 +12,7 @@ from django.db import models
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
+from django.utils import timezone
 
 from status.chromium import generate_pdf_from_html
 
@@ -102,6 +103,12 @@ def property(request, property_id):
 
     if not property_obj.is_public and property_obj.user != request.user:
         return redirect("properties")
+
+    if property_obj.user == request.user and request.GET.get('recrawl') == '':
+        property_obj.next_run_at_crawler = timezone.now()
+        property_obj.save()
+        messages.success(request, "This property will be recrawled shortly.")
+        return redirect("property", property_id=property_id)
 
     # Set some basic page context variables
     context["title"] = property_obj.name
