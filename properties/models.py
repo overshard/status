@@ -169,9 +169,9 @@ class CrawlerMixin:
 
     def get_next_run_at_crawl(self):
         """
-        Should check daily.
+        Should check weekly, users can recrawl whenever they want.
         """
-        return timezone.now() + timezone.timedelta(days=1)
+        return timezone.now() + timezone.timedelta(days=7)
 
     def should_check_crawl(self):
         now = timezone.now()
