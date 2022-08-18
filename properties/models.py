@@ -124,7 +124,7 @@ class AlertsMixin:
                 "embeds": [
                     {
                         "title": "Status",
-                        "description": f"{property.url} is down!",
+                        "description": f"{self.url} is down!",
                         "color": 16711680,
                         "timestamp": timezone.now().isoformat(),
                     }
