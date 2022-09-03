@@ -52,6 +52,9 @@ that you have the proper dependencies installed and if not it will try and
 install them for you. It will then create you a fresh database and run
 everything.
 
+If you want to also run the scheduler you'll have to do so separately. Run
+`make` in one window/tab and run `make scheduler` in another.
+
 
 ## Checking outdated dependencies
 
