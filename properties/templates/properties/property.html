@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static properties_tags %}
 
 
 {% block extra_js %}
@@ -157,35 +157,35 @@
         <li class="list-group-item bg-dark text-white">
           <strong>Security</strong>
         </li>
-        <li class="list-group-item d-flex justify-content-between">
+        <li class="list-group-item d-flex justify-content-between bg-light border-white border-start-0 border-end-0">
           <span>Use HTTPS</span>
           <span class="badge {% if property.is_https %}bg-success{% else %}bg-danger{% endif %}">{{ property.is_https }}</span>
         </li>
-        <li class="list-group-item d-flex justify-content-between">
+        <li class="list-group-item d-flex justify-content-between bg-light border-white border-start-0 border-end-0">
           <span>Set MIME types</span>
           <span class="badge {% if property.has_mime_type %}bg-success{% else %}bg-danger{% endif %}">{{ property.has_mime_type }}</span>
         </li>
-        <li class="list-group-item d-flex justify-content-between">
+        <li class="list-group-item d-flex justify-content-between bg-light border-white border-start-0 border-end-0">
           <span>Use content sniffing protection</span>
           <span class="badge {% if property.has_content_sniffing_protection %}bg-success{% else %}bg-danger{% endif %}">{{ property.has_content_sniffing_protection }}</span>
         </li>
-        <li class="list-group-item d-flex justify-content-between">
+        <li class="list-group-item d-flex justify-content-between bg-light border-white border-start-0 border-end-0">
           <span>Use clickjack protection</span>
           <span class="badge {% if property.has_clickjack_protection %}bg-success{% else %}bg-danger{% endif %}">{{ property.has_clickjack_protection }}</span>
         </li>
-        <li class="list-group-item d-flex justify-content-between">
+        <li class="list-group-item d-flex justify-content-between bg-light border-white border-start-0 border-end-0">
           <span>Use XSS protection</span>
           <span class="badge {% if property.has_xss_protection %}bg-success{% else %}bg-danger{% endif %}">{{ property.has_xss_protection }}</span>
         </li>
-        <li class="list-group-item d-flex justify-content-between">
+        <li class="list-group-item d-flex justify-content-between bg-light border-white border-start-0 border-end-0">
           <span>Hide server version data</span>
           <span class="badge {% if property.hides_server_version %}bg-success{% else %}bg-danger{% endif %}">{{ property.hides_server_version }}</span>
         </li>
-        <li class="list-group-item d-flex justify-content-between">
+        <li class="list-group-item d-flex justify-content-between bg-light border-white border-start-0 border-end-0">
           <span>Use HSTS</span>
           <span class="badge {% if property.has_hsts %}bg-success{% else %}bg-danger{% endif %}">{{ property.has_hsts }}</span>
         </li>
-        <li class="list-group-item d-flex justify-content-between">
+        <li class="list-group-item d-flex justify-content-between bg-light border-white border-start-0 border-end-0">
           <span>Use HSTS preload</span>
           <span class="badge {% if property.has_hsts_preload %}bg-success{% else %}bg-danger{% endif %}">{{ property.has_hsts_preload }}</span>
         </li>
@@ -196,35 +196,37 @@
 
 {% if property.crawler_insights %}
 <div class="container mt-4">
-  <div class="row bg-dark text-white py-2 rounded-top fw-bolder">
+  <div class="row bg-dark text-white py-2 mb-2 rounded rounded-sm fw-bolder">
     <div class="col-1">
       Type
     </div>
     <div class="col-3">
       URL
     </div>
-    <div class="col-3">
-      Item
-    </div>
     <div class="col-5">
       Issue
     </div>
+    <div class="col-3">
+      Item
+    </div>
   </div>
   {% for insight in property.crawler_insights|dictsort:"url" %}
-  <div class="row bg-light py-2 border-bottom">
-    <div class="col-md-1">
-      {{ insight.type|upper }}
+  <div class="row bg-light py-2 mb-2 rounded rounded-sm">
+    <div class="col-md-1 d-flex align-items-center">
+      <span class="badge bg-info">
+        {{ insight.type|upper }}
+      </span>
     </div>
-    <div class="col-md-3" style="word-wrap: break-word;">
-      <a href="{{ insight.url }}?utm_source=status.bythewood.me&utm_medium=insights" target="_blank">
-        {{ insight.url }}
+    <div class="col-md-3 text-truncate">
+      <a href="{{ insight.url }}" target="_blank">
+        {{ insight.url|url_path }}
       </a>
     </div>
-    <div class="col-md-3">
-      {{ insight.item }}
-    </div>
-    <div class="col-md-5">
+    <div class="col-md-5 text-truncate" {% if insight.issue %}data-bs-toggle="tooltip" data-bs-title="{{ insight.issue }}"{% endif %}>
       {{ insight.issue }}
+    </div>
+    <div class="col-md-3 text-truncate" {% if insight.item %}data-bs-toggle="tooltip" data-bs-title="{{ insight.item }}"{% endif %}>
+      {{ insight.item }}
     </div>
   </div>
   {% endfor %}
