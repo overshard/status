@@ -355,16 +355,16 @@ class Property(CrawlerMixin, AlertsMixin, SecurityMixin, models.Model):
             headers = {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 Status/1.0.0"
             }
-            response = requests.get(self.url, timeout=5, headers=headers)
+            response = requests.get(self.url, timeout=10, headers=headers)
             response_time = response.elapsed.total_seconds() * 1000
             status_code = response.status_code
             headers = response.headers
         except (requests.exceptions.SSLError):
-            response_time = 5000
+            response_time = 10000
             status_code = 526
             headers = {}
         except (requests.exceptions.RequestException, requests.exceptions.Timeout):
-            response_time = 5000
+            response_time = 10000
             status_code = 408
             headers = {}
         return Check.objects.create(
