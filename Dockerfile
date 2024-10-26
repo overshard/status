@@ -6,7 +6,7 @@ RUN apk add --update --no-cache \
       python3 py3-pip \
       nodejs yarn \
       chromium libstdc++ nss harfbuzz freetype font-noto font-noto-extra font-noto-emoji && \
-    pip install --upgrade pipenv
+    pip install --ignore-installed --upgrade pipenv
 
 WORKDIR /app
 
