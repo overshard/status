@@ -108,7 +108,7 @@ class SecurityMixin:
 
 class AlertsMixin:
 
-    def send_email(self):
+    def send_down_email(self):
         subject = f"Status: {self.name} is down!"
         message = render_to_string("emails/property_down.html", {"property": self})
         from_email = "noreply@bythewood.me"
@@ -117,27 +117,72 @@ class AlertsMixin:
         email.content_subtype = "html"
         email.send()
 
-    def send_discord_message(self):
+    def send_recovery_email(self):
+        subject = f"Status: {self.name} is back up!"
+        message = render_to_string("emails/property_recovery.html", {"property": self})
+        from_email = "noreply@bythewood.me"
+        to_emails = [self.user.email]
+        email = EmailMessage(subject, message, from_email, to_emails)
+        email.content_subtype = "html"
+        email.send()
+
+    def send_down_discord_message(self):
         if self.user.discord_webhook_url:
             payload = {
                 "username": "Status",
                 "embeds": [
                     {
-                        "title": "Status",
+                        "title": "Status Alert",
                         "description": f"{self.url} is down!",
-                        "color": 16711680,
+                        "color": 16711680,  # Red
                         "timestamp": timezone.now().isoformat(),
                     }
                 ],
             }
             requests.post(self.user.discord_webhook_url, json=payload)
 
-    def send_alerts(self):
-        # if the past two checks were != 200 send alerts
-        checks = self.statuses.order_by("-created_at")[:2]
-        if checks[0].status_code != 200 and checks[1].status_code != 200:
-            self.send_email()
-            self.send_discord_message()
+    def send_recovery_discord_message(self):
+        if self.user.discord_webhook_url:
+            payload = {
+                "username": "Status",
+                "embeds": [
+                    {
+                        "title": "Status Recovery",
+                        "description": f"{self.url} is back up!",
+                        "color": 65280,  # Green
+                        "timestamp": timezone.now().isoformat(),
+                    }
+                ],
+            }
+            requests.post(self.user.discord_webhook_url, json=payload)
+
+    def send_alerts(self, current_status_code):
+        """
+        Send alerts based on state transitions:
+        - Send 'down' alert when site goes from UP to DOWN
+        - Send 'recovery' alert when site goes from DOWN to UP
+        - No alerts for consecutive failures or consecutive successes
+        """
+        is_currently_up = current_status_code == 200
+
+        # Determine if we need to send an alert based on state change
+        if is_currently_up and self.alert_state == 'down':
+            # Site recovered: was down, now up
+            self.send_recovery_email()
+            self.send_recovery_discord_message()
+            self.alert_state = 'up'
+            self.last_alert_sent = timezone.now()
+            self.save(update_fields=['alert_state', 'last_alert_sent'])
+        elif not is_currently_up and self.alert_state == 'up':
+            # Site went down: was up, now down
+            # Only send if we have at least 2 consecutive failures to avoid false positives
+            checks = self.statuses.order_by("-created_at")[:2]
+            if len(checks) >= 2 and checks[0].status_code != 200 and checks[1].status_code != 200:
+                self.send_down_email()
+                self.send_down_discord_message()
+                self.alert_state = 'down'
+                self.last_alert_sent = timezone.now()
+                self.save(update_fields=['alert_state', 'last_alert_sent'])
 
 
 class CrawlerMixin:
@@ -317,6 +362,14 @@ class Property(CrawlerMixin, AlertsMixin, SecurityMixin, models.Model):
     last_lighthouse_run_at = models.DateTimeField(blank=True, null=True)
     next_lighthouse_run_at = models.DateTimeField(blank=True, null=True)
 
+    # Alert state tracking
+    last_alert_sent = models.DateTimeField(blank=True, null=True)
+    alert_state = models.CharField(
+        max_length=10,
+        choices=[('up', 'Up'), ('down', 'Down')],
+        default='up'
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -376,8 +429,8 @@ class Property(CrawlerMixin, AlertsMixin, SecurityMixin, models.Model):
 
     def process_check(self):
         check = self.run_check()
-        if check.status_code != 200:
-            self.send_alerts()
+        # Always check for state changes, regardless of current status
+        self.send_alerts(check.status_code)
 
     def get_next_run_at_lighthouse(self):
         """
