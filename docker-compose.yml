@@ -12,7 +12,7 @@ services:
     volumes:
       - /srv/data/status/:/data/
     ports:
-      - "${PORT}:${PORT}"
+      - "127.0.0.1:${PORT}:${PORT}"
     command: >
       gunicorn status.asgi:application --preload --workers 2 --max-requests 256
       --timeout 30 --bind :${PORT} --worker-class uvicorn.workers.UvicornWorker
