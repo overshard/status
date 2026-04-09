@@ -24,7 +24,7 @@ def run_seo_spider(url):
 
     # use the jsonlines format to store the results
     subprocess.run([
-        'pipenv',
+        'uv',
         'run',
         'scrapy',
         'crawl',

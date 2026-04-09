@@ -2,22 +2,22 @@ FROM alpine:3.16
 
 ENV LANG "C.UTF-8"
 
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
+
 RUN apk add --update --no-cache \
       python3 py3-pip \
       nodejs yarn \
-      chromium libstdc++ nss harfbuzz freetype font-noto font-noto-extra font-noto-emoji && \
-    pip install --ignore-installed --upgrade pipenv
+      chromium libstdc++ nss harfbuzz freetype font-noto font-noto-extra font-noto-emoji
 
 WORKDIR /app
 
-COPY Pipfile Pipfile.lock package.json yarn.lock /app/
+COPY pyproject.toml uv.lock package.json yarn.lock /app/
 RUN yarn install && \
-    PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
+    uv sync --frozen --no-dev
 
 COPY . .
 
 ENV PATH="/app/.venv/bin:/app/node_modules/.bin:$PATH"
-ENV PYTHONPATH="/app/.venv/lib/python3.10/site-packages:$PYTHONPATH"
 
 RUN webpack --config webpack.config.js --mode production && \
     python3 manage.py collectstatic --noinput
