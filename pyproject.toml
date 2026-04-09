@@ -1,0 +1,31 @@
+[project]
+name = "status"
+version = "0.0.1"
+requires-python = ">=3.10"
+dependencies = [
+    "django",
+    "gunicorn",
+    "requests",
+    "tzdata",
+    "uvicorn",
+    "whitenoise",
+    "scrapy",
+    "w3lib",
+]
+
+[dependency-groups]
+dev = [
+    "black",
+    "flake8",
+    "isort",
+]
+
+[tool.black]
+line-length = 88
+
+[tool.isort]
+profile = "black"
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = "E203"

@@ -2,8 +2,8 @@
 A simple library for working with the chromium browser in headless mode for
 generating things like screenshots.
 """
-import distutils
 import os
+import shutil
 import subprocess
 import uuid
 
@@ -12,12 +12,10 @@ from django.core.files.storage import default_storage
 
 # Get chromium path, it's sometimes chromium and sometimes chromium-browser
 chromium = None
-if distutils.spawn.find_executable("chromium"):
+if shutil.which("chromium"):
     chromium = "chromium"
-elif distutils.spawn.find_executable("chromium-browser"):
+elif shutil.which("chromium-browser"):
     chromium = "chromium-browser"
-else:
-    raise Exception("Could not find chromium")
 
 
 base_command = [
@@ -34,7 +32,7 @@ base_command = [
     "--disable-logging",
     "--window-size=1280x720",
     "--hide-scrollbars",
-]
+] if chromium else []
 
 
 def save_tempfile_to_storage(tempfilename, filename):
@@ -56,6 +54,8 @@ def run_chromium_command(command):
 
     :param command: The command to run
     """
+    if not chromium:
+        raise Exception("Could not find chromium")
     command = command.split()
     command = base_command + command
     subprocess.run(

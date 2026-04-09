@@ -31,7 +31,7 @@ If you want to install things without docker then you'll need the following
 dependencies:
 
 - python
-- pipenv
+- uv
 - node
 - yarn
 - chromium
@@ -58,15 +58,14 @@ If you want to also run the scheduler you'll have to do so separately. Run
 
 ## Checking outdated dependencies
 
-This can be done in both yarn and pipenv with the following two commands:
+This can be done in both yarn and uv with the following two commands:
 
-    pipenv update --outdated
+    uv lock --upgrade --dry-run
     yarn outdated
 
-You can then upgrade the outdated dependencies with the following two commands:
+You can then upgrade all dependencies at once with:
 
-    pipenv update
-    yarn upgrade
+    make update
 
 I recommend testing everything after this to make sure it's all working.
 
