@@ -1,7 +1,15 @@
+import logging
 import subprocess
 import os
 
 from django.conf import settings
+
+
+logger = logging.getLogger(__name__)
+
+# Cap a single SEO crawl. Spiders that wedge on a slow site otherwise hold a
+# scheduler thread forever.
+SUBPROCESS_TIMEOUT_SECONDS = 600
 
 
 def run_seo_spider(url):
@@ -23,16 +31,22 @@ def run_seo_spider(url):
         os.remove(filename)
 
     # use the jsonlines format to store the results
-    subprocess.run([
-        'uv',
-        'run',
-        'scrapy',
-        'crawl',
-        'seo_spider',
-        '-a',
-        'url=' + url,
-        '-t',
-        'jsonlines',
-        '-o',
-        filename,
-    ])
+    try:
+        subprocess.run(
+            [
+                'uv',
+                'run',
+                'scrapy',
+                'crawl',
+                'seo_spider',
+                '-a',
+                'url=' + url,
+                '-t',
+                'jsonlines',
+                '-o',
+                filename,
+            ],
+            timeout=SUBPROCESS_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired:
+        logger.warning("SEO spider timed out after %ss for %s", SUBPROCESS_TIMEOUT_SECONDS, url)

@@ -7,7 +7,7 @@ import logging
 import requests
 from django.contrib.auth import get_user_model
 from django.core.mail import EmailMessage
-from django.db import models
+from django.db import models, transaction
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -119,7 +119,10 @@ class AlertsMixin:
         to_emails = [self.user.email]
         email = EmailMessage(subject, message, from_email, to_emails)
         email.content_subtype = "html"
-        email.send()
+        try:
+            email.send()
+        except Exception:
+            logger.exception("Failed to send down email for %s", self.url)
 
     def send_recovery_email(self):
         subject = f"Status: {self.name} is back up!"
@@ -128,7 +131,10 @@ class AlertsMixin:
         to_emails = [self.user.email]
         email = EmailMessage(subject, message, from_email, to_emails)
         email.content_subtype = "html"
-        email.send()
+        try:
+            email.send()
+        except Exception:
+            logger.exception("Failed to send recovery email for %s", self.url)
 
     def send_down_discord_message(self):
         if self.user.discord_webhook_url:
@@ -143,7 +149,10 @@ class AlertsMixin:
                     }
                 ],
             }
-            requests.post(self.user.discord_webhook_url, json=payload)
+            try:
+                requests.post(self.user.discord_webhook_url, json=payload, timeout=5)
+            except requests.RequestException:
+                logger.exception("Discord down webhook failed for %s", self.url)
 
     def send_recovery_discord_message(self):
         if self.user.discord_webhook_url:
@@ -158,7 +167,10 @@ class AlertsMixin:
                     }
                 ],
             }
-            requests.post(self.user.discord_webhook_url, json=payload)
+            try:
+                requests.post(self.user.discord_webhook_url, json=payload, timeout=5)
+            except requests.RequestException:
+                logger.exception("Discord recovery webhook failed for %s", self.url)
 
     def send_alerts(self, current_status_code):
         """
@@ -169,24 +181,30 @@ class AlertsMixin:
         """
         is_currently_up = current_status_code == 200
 
-        # Determine if we need to send an alert based on state change
-        if is_currently_up and self.alert_state == 'down':
-            # Site recovered: was down, now up
-            self.send_recovery_email()
-            self.send_recovery_discord_message()
-            self.alert_state = 'up'
-            self.last_alert_sent = timezone.now()
-            self.save(update_fields=['alert_state', 'last_alert_sent'])
-        elif not is_currently_up and self.alert_state == 'up':
-            # Site went down: was up, now down
-            # Only send if we have at least 2 consecutive failures to avoid false positives
-            checks = self.statuses.order_by("-created_at")[:2]
-            if len(checks) >= 2 and checks[0].status_code != 200 and checks[1].status_code != 200:
-                self.send_down_email()
-                self.send_down_discord_message()
-                self.alert_state = 'down'
-                self.last_alert_sent = timezone.now()
-                self.save(update_fields=['alert_state', 'last_alert_sent'])
+        # Lock the property row so concurrent checks can't both observe the
+        # same alert_state and double-fire transitions.
+        with transaction.atomic():
+            locked = Property.objects.select_for_update().get(pk=self.pk)
+
+            if is_currently_up and locked.alert_state == 'down':
+                self.send_recovery_email()
+                self.send_recovery_discord_message()
+                locked.alert_state = 'up'
+                locked.last_alert_sent = timezone.now()
+                locked.save(update_fields=['alert_state', 'last_alert_sent'])
+                self.alert_state = locked.alert_state
+                self.last_alert_sent = locked.last_alert_sent
+            elif not is_currently_up and locked.alert_state == 'up':
+                # Require at least 2 consecutive failures to avoid false positives.
+                checks = self.statuses.order_by("-created_at")[:2]
+                if len(checks) >= 2 and checks[0].status_code != 200 and checks[1].status_code != 200:
+                    self.send_down_email()
+                    self.send_down_discord_message()
+                    locked.alert_state = 'down'
+                    locked.last_alert_sent = timezone.now()
+                    locked.save(update_fields=['alert_state', 'last_alert_sent'])
+                    self.alert_state = locked.alert_state
+                    self.last_alert_sent = locked.last_alert_sent
 
 
 class CrawlerMixin:
@@ -230,12 +248,14 @@ class CrawlerMixin:
             return True
         return self.next_run_at_crawler <= now
 
-    def parse_page(self, page):
+    def parse_page(self, page, duplicates=None):
         insights = []
 
         # Make sure the content type is text/html else skip
         if "text/html" not in page.get("content_type", ""):
             return insights
+
+        duplicates = duplicates or {"title": set(), "description": set(), "h1": set()}
 
         # Make sure all pages have a title
         if page['title'] == '':
@@ -257,7 +277,7 @@ class CrawlerMixin:
             })
 
         # Make sure pages have a unique title
-        if page['title'] in [p['title'] for p in self.get_crawl_output if p['url'] != page['url']]:
+        if page['title'] in duplicates['title']:
             logger.warning(f"Page {page['url']} has duplicate title")
             insights.append({
                 'url': page['url'],
@@ -286,7 +306,7 @@ class CrawlerMixin:
             })
 
         # Make sure pages have a unique description
-        if page['description'] in [p['description'] for p in self.get_crawl_output if p['url'] != page['url']]:
+        if page['description'] in duplicates['description']:
             logger.warning(f"Page {page['url']} has duplicate description")
             insights.append({
                 'url': page['url'],
@@ -315,7 +335,7 @@ class CrawlerMixin:
             })
 
         # Make sure pages have a unique h1
-        if page['h1'] in [p['h1'] for p in self.get_crawl_output if p['url'] != page['url']]:
+        if page['h1'] in duplicates['h1']:
             logger.warning(f"Page {page['url']} has duplicate h1")
             insights.append({
                 'url': page['url'],
@@ -336,9 +356,21 @@ class CrawlerMixin:
         return insights
 
     def parse_crawl(self):
+        # Pre-compute the set of values that appear on more than one page so the
+        # per-page uniqueness check is O(1) instead of scanning the full crawl.
+        duplicates = {"title": set(), "description": set(), "h1": set()}
+        for field in duplicates:
+            seen = set()
+            for p in self.get_crawl_output:
+                value = p.get(field, "")
+                if value in seen:
+                    duplicates[field].add(value)
+                else:
+                    seen.add(value)
+
         insights = []
         for page in self.get_crawl_output:
-            insights.extend(self.parse_page(page))
+            insights.extend(self.parse_page(page, duplicates=duplicates))
         self.crawler_insights = insights
         self.save(update_fields=['crawler_insights'])
 
@@ -414,7 +446,7 @@ class Property(CrawlerMixin, AlertsMixin, SecurityMixin, models.Model):
             headers = {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.115 Safari/537.36 Status/1.0.0"
             }
-            response = requests.get(self.url, timeout=10, headers=headers)
+            response = requests.get(self.url, timeout=(3, 10), headers=headers)
             response_time = response.elapsed.total_seconds() * 1000
             status_code = response.status_code
             headers = response.headers
@@ -536,6 +568,7 @@ class Check(models.Model):
         verbose_name_plural = "Checks"
         indexes = [
             models.Index(fields=["created_at"]),
+            models.Index(fields=["property", "-created_at"]),
         ]
         get_latest_by = "created_at"
 
