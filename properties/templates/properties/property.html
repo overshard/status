@@ -53,9 +53,10 @@
           <a href="{% url 'property' property.id %}?report" target="_blank" class="btn btn-sm btn-primary ms-0 ms-lg-3 my-1">
             Report
           </a>
-          <a href="{% url 'property' property.id %}?recrawl" class="btn btn-sm btn-primary ms-0 ms-lg-3 my-1">
-            Recrawl
-          </a>
+          <button type="button" id="recrawl-btn" class="btn btn-sm btn-primary ms-0 ms-lg-3 my-1" data-property-id="{{ property.id }}">
+            <span class="recrawl-btn-label">Recrawl</span>
+            <span class="recrawl-btn-spinner spinner-border spinner-border-sm ms-1 d-none" role="status" aria-hidden="true"></span>
+          </button>
           {% endif %}
           {% if not property.is_protected and user.is_authenticated %}
           <button type="button" class="btn btn-sm btn-outline-danger ms-1 ms-lg-3 my-1" data-bs-toggle="modal" data-bs-target="#delete-modal-{{ property.id }}">
@@ -129,14 +130,79 @@
 </div>
 {% endif %}
 
-{% if property.last_lighthouse_error and user.is_authenticated %}
-<div class="container-fluid mb-4">
-  <div class="alert alert-warning mb-0" role="alert">
-    <strong>Last Lighthouse run failed:</strong>
-    <code>{{ property.last_lighthouse_error }}</code>
-    {% if property.last_lighthouse_run_at %}
-      <span class="text-muted small d-block">attempted {{ property.last_lighthouse_run_at|timesince }} ago</span>
-    {% endif %}
+{% if user.is_authenticated %}
+<form style="display:none">{% csrf_token %}</form>
+<div class="container mt-4 d-print-none" id="monitoring-status" data-property-id="{{ property.id }}" data-status-url="{% url 'property_status' property.id %}" data-recrawl-url="{% url 'property_recrawl' property.id %}" data-rerun-lighthouse-url="{% url 'property_rerun_lighthouse' property.id %}">
+  <div class="row g-3">
+    <div class="col-12 col-md-6">
+      <div class="card h-100">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+          <strong>Crawler</strong>
+          <span class="badge" data-field="crawler.state_badge">&nbsp;</span>
+        </div>
+        <div class="card-body">
+          <div class="progress mb-3 d-none" data-field="crawler.progress_wrap" style="height: 6px;">
+            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" data-field="crawler.progress_bar" style="width: 0%"></div>
+          </div>
+          <div class="alert alert-danger py-2 mb-3 d-none small" data-field="crawler.error_box" role="alert">
+            <strong>Last crawl failed:</strong>
+            <code data-field="crawler.error_text"></code>
+          </div>
+          <dl class="row small mb-0">
+            <dt class="col-5 col-sm-5 text-muted">Last success</dt>
+            <dd class="col-7 col-sm-7 mb-1" data-field="crawler.last_success">—</dd>
+
+            <dt class="col-5 col-sm-5 text-muted">Last attempt</dt>
+            <dd class="col-7 col-sm-7 mb-1" data-field="crawler.last_attempt">—</dd>
+
+            <dt class="col-5 col-sm-5 text-muted">Pages crawled</dt>
+            <dd class="col-7 col-sm-7 mb-1" data-field="crawler.pages">—</dd>
+
+            <dt class="col-5 col-sm-5 text-muted">Duration</dt>
+            <dd class="col-7 col-sm-7 mb-1" data-field="crawler.duration">—</dd>
+
+            <dt class="col-5 col-sm-5 text-muted">Issues found</dt>
+            <dd class="col-7 col-sm-7 mb-1" data-field="crawler.insights">—</dd>
+
+            <dt class="col-5 col-sm-5 text-muted">Next run</dt>
+            <dd class="col-7 col-sm-7 mb-0" data-field="crawler.next_run">—</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-6">
+      <div class="card h-100">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+          <strong>Lighthouse</strong>
+          <span class="d-flex align-items-center gap-2">
+            <span class="badge" data-field="lighthouse.state_badge">&nbsp;</span>
+            <button type="button" id="rerun-lighthouse-btn" class="btn btn-sm btn-outline-light py-0" title="Rerun Lighthouse now">
+              <span class="rerun-lh-label">Rerun</span>
+              <span class="rerun-lh-spinner spinner-border spinner-border-sm ms-1 d-none" role="status" aria-hidden="true"></span>
+            </button>
+          </span>
+        </div>
+        <div class="card-body">
+          <div class="alert alert-warning py-2 mb-3 d-none small" data-field="lighthouse.error_box" role="alert">
+            <strong>Last Lighthouse run failed:</strong>
+            <code data-field="lighthouse.error_text"></code>
+          </div>
+          <dl class="row small mb-0">
+            <dt class="col-5 col-sm-5 text-muted">Last success</dt>
+            <dd class="col-7 col-sm-7 mb-1" data-field="lighthouse.last_success">—</dd>
+
+            <dt class="col-5 col-sm-5 text-muted">Last attempt</dt>
+            <dd class="col-7 col-sm-7 mb-1" data-field="lighthouse.last_attempt">—</dd>
+
+            <dt class="col-5 col-sm-5 text-muted">Duration</dt>
+            <dd class="col-7 col-sm-7 mb-1" data-field="lighthouse.duration">—</dd>
+
+            <dt class="col-5 col-sm-5 text-muted">Next run</dt>
+            <dd class="col-7 col-sm-7 mb-0" data-field="lighthouse.next_run">—</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 {% endif %}

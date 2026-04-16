@@ -1,4 +1,5 @@
 import re
+import time
 import uuid
 import logging
 
@@ -217,10 +218,34 @@ class CrawlerMixin:
             return True
         return self.next_run_at_crawler <= now
 
+    def _report_crawl_progress(self, pages_count):
+        Property.objects.filter(pk=self.pk).update(last_crawl_pages_count=pages_count)
+
     def crawl_site(self):
-        insights = run_seo_spider(self.url)
-        self.crawler_insights = insights
-        self.save(update_fields=["crawler_insights"])
+        Property.objects.filter(pk=self.pk).update(
+            crawl_state="running",
+            crawl_started_at=timezone.now(),
+            last_crawl_pages_count=0,
+        )
+        start = time.monotonic()
+        try:
+            insights = run_seo_spider(self.url, progress_cb=self._report_crawl_progress)
+        except Exception as e:
+            logger.exception("Crawl failed for %s", self.url)
+            Property.objects.filter(pk=self.pk).update(
+                crawl_state="idle",
+                last_crawl_error=f"{type(e).__name__}: {e}",
+                last_crawl_duration_ms=int((time.monotonic() - start) * 1000),
+            )
+            return
+        duration_ms = int((time.monotonic() - start) * 1000)
+        Property.objects.filter(pk=self.pk).update(
+            crawler_insights=insights,
+            crawl_state="idle",
+            last_crawl_success_at=timezone.now(),
+            last_crawl_error=None,
+            last_crawl_duration_ms=duration_ms,
+        )
 
 
 class Property(CrawlerMixin, AlertsMixin, SecurityMixin, models.Model):
@@ -237,12 +262,29 @@ class Property(CrawlerMixin, AlertsMixin, SecurityMixin, models.Model):
     last_run_at_crawler = models.DateTimeField(blank=True, null=True)
     next_run_at_crawler = models.DateTimeField(blank=True, null=True)
     crawler_insights = models.JSONField(blank=True, null=True)
+    crawl_state = models.CharField(
+        max_length=10,
+        choices=[("idle", "Idle"), ("queued", "Queued"), ("running", "Running")],
+        default="idle",
+    )
+    crawl_started_at = models.DateTimeField(blank=True, null=True)
+    last_crawl_success_at = models.DateTimeField(blank=True, null=True)
+    last_crawl_error = models.TextField(blank=True, null=True)
+    last_crawl_duration_ms = models.IntegerField(blank=True, null=True)
+    last_crawl_pages_count = models.IntegerField(blank=True, null=True)
 
     lighthouse_scores = models.JSONField(blank=True, null=True)
     last_lighthouse_run_at = models.DateTimeField(blank=True, null=True)
     last_lighthouse_success_at = models.DateTimeField(blank=True, null=True)
     last_lighthouse_error = models.TextField(blank=True, null=True)
+    last_lighthouse_duration_ms = models.IntegerField(blank=True, null=True)
     next_lighthouse_run_at = models.DateTimeField(blank=True, null=True)
+    lighthouse_state = models.CharField(
+        max_length=10,
+        choices=[("idle", "Idle"), ("queued", "Queued"), ("running", "Running")],
+        default="idle",
+    )
+    lighthouse_started_at = models.DateTimeField(blank=True, null=True)
 
     # Alert state tracking
     last_alert_sent = models.DateTimeField(blank=True, null=True)
@@ -332,29 +374,37 @@ class Property(CrawlerMixin, AlertsMixin, SecurityMixin, models.Model):
         self.run_check_lighthouse()
 
     def run_check_lighthouse(self):
+        Property.objects.filter(pk=self.pk).update(
+            lighthouse_state="running",
+            lighthouse_started_at=timezone.now(),
+        )
+        start = time.monotonic()
         try:
             results = fetch_lighthouse_results(self.url)
             scores = parse_lighthouse_results(results)
         except LighthouseError as e:
             logger.warning("Lighthouse failed for %s: %s", self.url, e)
-            self.last_lighthouse_error = str(e)
-            self.save(update_fields=["last_lighthouse_error"])
+            Property.objects.filter(pk=self.pk).update(
+                lighthouse_state="idle",
+                last_lighthouse_error=str(e),
+                last_lighthouse_duration_ms=int((time.monotonic() - start) * 1000),
+            )
             return
         except Exception as e:
             logger.exception("Unexpected lighthouse error for %s", self.url)
-            self.last_lighthouse_error = f"{type(e).__name__}: {e}"
-            self.save(update_fields=["last_lighthouse_error"])
+            Property.objects.filter(pk=self.pk).update(
+                lighthouse_state="idle",
+                last_lighthouse_error=f"{type(e).__name__}: {e}",
+                last_lighthouse_duration_ms=int((time.monotonic() - start) * 1000),
+            )
             return
 
-        self.lighthouse_scores = scores
-        self.last_lighthouse_success_at = timezone.now()
-        self.last_lighthouse_error = None
-        self.save(
-            update_fields=[
-                "lighthouse_scores",
-                "last_lighthouse_success_at",
-                "last_lighthouse_error",
-            ]
+        Property.objects.filter(pk=self.pk).update(
+            lighthouse_scores=scores,
+            last_lighthouse_success_at=timezone.now(),
+            last_lighthouse_error=None,
+            last_lighthouse_duration_ms=int((time.monotonic() - start) * 1000),
+            lighthouse_state="idle",
         )
 
     @property

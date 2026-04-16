@@ -104,12 +104,6 @@ def property(request, property_id):
     if not property_obj.is_public and property_obj.user != request.user:
         return redirect("properties")
 
-    if property_obj.user == request.user and request.GET.get('recrawl') == '':
-        property_obj.next_run_at_crawler = timezone.now()
-        property_obj.save()
-        messages.success(request, "This property will be recrawled shortly.")
-        return redirect("property", property_id=property_id)
-
     # Set some basic page context variables
     context["title"] = property_obj.name
     context["description"] = "Status for " + property_obj.name
@@ -156,6 +150,139 @@ def property(request, property_id):
             return response
 
     return render(request, "properties/property.html", context)
+
+
+def _crawl_progress(property_obj):
+    """Return the fraction (0-1) of the discovered work that's complete."""
+    from crawler.fetcher import PAGE_CAP
+
+    pages = property_obj.last_crawl_pages_count or 0
+    if pages <= 0:
+        return 0.05  # show *some* movement once we start
+    # We don't know the total ahead of time, so use a log-ish ratio capped at
+    # ~90% — the last 10% is reserved for post-crawl check processing.
+    return min(pages / PAGE_CAP, 0.9)
+
+
+def _serialize_status(property_obj):
+    now = timezone.now()
+
+    crawl_next = property_obj.next_run_at_crawler
+    lh_next = property_obj.next_lighthouse_run_at
+
+    insights = property_obj.crawler_insights or []
+    severity_counts = {"error": 0, "warning": 0, "info": 0}
+    for insight in insights:
+        sev = insight.get("severity", "info")
+        if sev in severity_counts:
+            severity_counts[sev] += 1
+
+    return {
+        "crawler": {
+            "state": property_obj.crawl_state,
+            "started_at": property_obj.crawl_started_at.isoformat()
+            if property_obj.crawl_started_at
+            else None,
+            "last_attempt_at": property_obj.last_run_at_crawler.isoformat()
+            if property_obj.last_run_at_crawler
+            else None,
+            "last_success_at": property_obj.last_crawl_success_at.isoformat()
+            if property_obj.last_crawl_success_at
+            else None,
+            "last_error": property_obj.last_crawl_error,
+            "last_duration_ms": property_obj.last_crawl_duration_ms,
+            "pages_count": property_obj.last_crawl_pages_count,
+            "next_run_at": crawl_next.isoformat() if crawl_next else None,
+            "is_overdue": bool(crawl_next and crawl_next <= now),
+            "insights_total": len(insights),
+            "insights_by_severity": severity_counts,
+            "progress": _crawl_progress(property_obj)
+            if property_obj.crawl_state == "running"
+            else None,
+        },
+        "lighthouse": {
+            "state": property_obj.lighthouse_state,
+            "started_at": property_obj.lighthouse_started_at.isoformat()
+            if property_obj.lighthouse_started_at
+            else None,
+            "last_attempt_at": property_obj.last_lighthouse_run_at.isoformat()
+            if property_obj.last_lighthouse_run_at
+            else None,
+            "last_success_at": property_obj.last_lighthouse_success_at.isoformat()
+            if property_obj.last_lighthouse_success_at
+            else None,
+            "last_error": property_obj.last_lighthouse_error,
+            "last_duration_ms": property_obj.last_lighthouse_duration_ms,
+            "next_run_at": lh_next.isoformat() if lh_next else None,
+            "is_overdue": bool(lh_next and lh_next <= now),
+            "scores": property_obj.lighthouse_scores,
+        },
+        "server_time": now.isoformat(),
+    }
+
+
+def property_status(request, property_id):
+    try:
+        property_obj = Property.objects.get(pk=property_id)
+    except Property.DoesNotExist:
+        return JsonResponse({"error": "not_found"}, status=404)
+
+    if not property_obj.is_public and property_obj.user != request.user:
+        return JsonResponse({"error": "forbidden"}, status=403)
+
+    return JsonResponse(_serialize_status(property_obj))
+
+
+def property_recrawl(request, property_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "forbidden"}, status=403)
+
+    if request.method != "POST":
+        return JsonResponse({"error": "method_not_allowed"}, status=405)
+
+    try:
+        property_obj = request.user.properties.get(pk=property_id)
+    except Property.DoesNotExist:
+        return JsonResponse({"error": "not_found"}, status=404)
+
+    if property_obj.crawl_state in ("queued", "running"):
+        return JsonResponse(
+            {
+                "ok": False,
+                "reason": "already_running",
+                **_serialize_status(property_obj),
+            }
+        )
+
+    property_obj.next_run_at_crawler = timezone.now()
+    property_obj.save(update_fields=["next_run_at_crawler"])
+    return JsonResponse({"ok": True, **_serialize_status(property_obj)})
+
+
+def property_rerun_lighthouse(request, property_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "forbidden"}, status=403)
+
+    if request.method != "POST":
+        return JsonResponse({"error": "method_not_allowed"}, status=405)
+
+    try:
+        property_obj = request.user.properties.get(pk=property_id)
+    except Property.DoesNotExist:
+        return JsonResponse({"error": "not_found"}, status=404)
+
+    if property_obj.lighthouse_state in ("queued", "running"):
+        return JsonResponse(
+            {
+                "ok": False,
+                "reason": "already_running",
+                **_serialize_status(property_obj),
+            }
+        )
+
+    property_obj.next_lighthouse_run_at = timezone.now()
+    property_obj.save(update_fields=["next_lighthouse_run_at"])
+    return JsonResponse({"ok": True, **_serialize_status(property_obj)})
 
 
 def import_property(request, url):
