@@ -53,10 +53,6 @@
           <a href="{% url 'property' property.id %}?report" target="_blank" class="btn btn-sm btn-primary ms-0 ms-lg-3 my-1">
             Report
           </a>
-          <button type="button" id="recrawl-btn" class="btn btn-sm btn-primary ms-0 ms-lg-3 my-1" data-property-id="{{ property.id }}">
-            <span class="recrawl-btn-label">Recrawl</span>
-            <span class="recrawl-btn-spinner spinner-border spinner-border-sm ms-1 d-none" role="status" aria-hidden="true"></span>
-          </button>
           {% endif %}
           {% if not property.is_protected and user.is_authenticated %}
           <button type="button" class="btn btn-sm btn-outline-danger ms-1 ms-lg-3 my-1" data-bs-toggle="modal" data-bs-target="#delete-modal-{{ property.id }}">
@@ -138,7 +134,13 @@
       <div class="card h-100">
         <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
           <strong>Crawler</strong>
-          <span class="badge" data-field="crawler.state_badge">&nbsp;</span>
+          <span class="d-flex align-items-center gap-2">
+            <span class="badge" data-field="crawler.state_badge">&nbsp;</span>
+            <button type="button" id="recrawl-btn" class="btn btn-sm btn-outline-light py-0" title="Recrawl now">
+              <span class="recrawl-btn-label">Recrawl</span>
+              <span class="recrawl-btn-spinner spinner-border spinner-border-sm ms-1 d-none" role="status" aria-hidden="true"></span>
+            </button>
+          </span>
         </div>
         <div class="card-body">
           <div class="progress mb-3 d-none" data-field="crawler.progress_wrap" style="height: 6px;">
