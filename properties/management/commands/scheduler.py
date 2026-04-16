@@ -46,9 +46,10 @@ class Command(BaseCommand):
 
     def queue_process(self):
         # Cap on join() so a wedged lighthouse/crawler can't freeze the queue
-        # indefinitely. Must exceed status.lighthouse.SUBPROCESS_TIMEOUT_SECONDS
-        # so a normal slow run still completes inside the window.
-        JOIN_TIMEOUT = 300
+        # indefinitely. Must exceed both status.lighthouse.SUBPROCESS_TIMEOUT_SECONDS
+        # (180s) and crawler.fetcher.CRAWL_DEADLINE_SECONDS (540s) so a normal
+        # slow run still completes inside the window.
+        JOIN_TIMEOUT = 900
         while True:
             if not q.empty():
                 threads = []

@@ -1,7 +1,5 @@
 import re
 import uuid
-import os
-import json
 import logging
 
 import requests
@@ -11,7 +9,6 @@ from django.db import models, transaction
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.functional import cached_property
-from django.conf import settings
 from crawler.runner import run_seo_spider
 
 from status.lighthouse import (
@@ -208,36 +205,8 @@ class AlertsMixin:
 
 
 class CrawlerMixin:
-    @cached_property
-    def get_crawl_output(self):
-        """
-        This will fetch crawler output in the JSON format from the folders:
-
-        - DEBUG == True: crawler_output/
-        - DEBUG == False: /data/crawler_output/
-
-        The filename in the folder is the site URL `self.url.split("/")[2] + ".json"`.
-
-        Need to parse every line individually to get the data.
-        """
-        if settings.DEBUG:
-            path = "crawler_output/"
-        else:
-            path = "/data/crawler_output/"
-
-        try:
-            with open(os.path.join(path, self.url.split("/")[2] + ".json")) as f:
-                data = []
-                for line in f:
-                    data.append(json.loads(line))
-                return data
-        except FileNotFoundError:
-            return []
-
     def get_next_run_at_crawl(self):
-        """
-        Should check weekly, users can recrawl whenever they want.
-        """
+        """Weekly crawl by default; users can trigger a recrawl anytime."""
         return timezone.now() + timezone.timedelta(days=7)
 
     def should_check_crawl(self):
@@ -248,135 +217,10 @@ class CrawlerMixin:
             return True
         return self.next_run_at_crawler <= now
 
-    def parse_page(self, page, duplicates=None):
-        insights = []
-
-        # Make sure the content type is text/html else skip
-        if "text/html" not in page.get("content_type", ""):
-            return insights
-
-        duplicates = duplicates or {"title": set(), "description": set(), "h1": set()}
-
-        # Make sure all pages have a title
-        if page['title'] == '':
-            logger.warning(f"Page {page['url']} has no title")
-            insights.append({
-                'url': page['url'],
-                'issue': 'Page has no title',
-                'type': 'seo',
-            })
-
-        # Make sure pages have a title between 30 and 60 characters
-        if len(page['title']) < 30 or len(page['title']) > 60:
-            logger.warning(f"Page {page['url']} has title of length {len(page['title'])}")
-            insights.append({
-                'url': page['url'],
-                'item': page['title'],
-                'issue': 'Page title is not between 30 and 60 characters',
-                'type': 'seo',
-            })
-
-        # Make sure pages have a unique title
-        if page['title'] in duplicates['title']:
-            logger.warning(f"Page {page['url']} has duplicate title")
-            insights.append({
-                'url': page['url'],
-                'item': page['title'],
-                'issue': 'Page has duplicate title',
-                'type': 'seo',
-            })
-
-        # Make sure pages have a description
-        if page['description'] == '':
-            logger.warning(f"Page {page['url']} has no description")
-            insights.append({
-                'url': page['url'],
-                'issue': 'Page has no description',
-                'type': 'seo',
-            })
-
-        # Make sure pages have a description between 70 and 160 characters
-        if len(page['description']) < 70 or len(page['description']) > 160:
-            logger.warning(f"Page {page['url']} has description of length {len(page['description'])}")
-            insights.append({
-                'url': page['url'],
-                'item': page['description'],
-                'issue': 'Page description is not between 70 and 160 characters',
-                'type': 'seo',
-            })
-
-        # Make sure pages have a unique description
-        if page['description'] in duplicates['description']:
-            logger.warning(f"Page {page['url']} has duplicate description")
-            insights.append({
-                'url': page['url'],
-                'item': page['description'],
-                'issue': 'Page has duplicate description',
-                'type': 'seo',
-            })
-
-        # Make sure pages have an h1
-        if page['h1'] == '':
-            logger.warning(f"Page {page['url']} has no h1")
-            insights.append({
-                'url': page['url'],
-                'issue': 'Page has no h1',
-                'type': 'seo',
-            })
-
-        # Make sure pages have an h1 between 20 and 70 characters
-        if len(page['h1']) < 20 or len(page['h1']) > 70:
-            logger.warning(f"Page {page['url']} has h1 of length {len(page['h1'])}")
-            insights.append({
-                'url': page['url'],
-                'item': page['h1'],
-                'issue': 'Page h1 is not between 20 and 70 characters',
-                'type': 'seo',
-            })
-
-        # Make sure pages have a unique h1
-        if page['h1'] in duplicates['h1']:
-            logger.warning(f"Page {page['url']} has duplicate h1")
-            insights.append({
-                'url': page['url'],
-                'item': page['h1'],
-                'issue': 'Page has duplicate h1',
-                'type': 'seo',
-            })
-
-        # Make sure pages have a canonical url
-        if page['canonical'] == '':
-            logger.warning(f"Page {page['url']} has no canonical url")
-            insights.append({
-                'url': page['url'],
-                'issue': 'Page has no canonical url',
-                'type': 'seo',
-            })
-
-        return insights
-
-    def parse_crawl(self):
-        # Pre-compute the set of values that appear on more than one page so the
-        # per-page uniqueness check is O(1) instead of scanning the full crawl.
-        duplicates = {"title": set(), "description": set(), "h1": set()}
-        for field in duplicates:
-            seen = set()
-            for p in self.get_crawl_output:
-                value = p.get(field, "")
-                if value in seen:
-                    duplicates[field].add(value)
-                else:
-                    seen.add(value)
-
-        insights = []
-        for page in self.get_crawl_output:
-            insights.extend(self.parse_page(page, duplicates=duplicates))
-        self.crawler_insights = insights
-        self.save(update_fields=['crawler_insights'])
-
     def crawl_site(self):
-        run_seo_spider(self.url)
-        self.parse_crawl()
+        insights = run_seo_spider(self.url)
+        self.crawler_insights = insights
+        self.save(update_fields=["crawler_insights"])
 
 
 class Property(CrawlerMixin, AlertsMixin, SecurityMixin, models.Model):
