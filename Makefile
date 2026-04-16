@@ -1,7 +1,7 @@
-# Django + Webpack Makefile
+# Django + Vite Makefile
 
 
-.PHONY: run runserver webpack check clean push pull update scheduler
+.PHONY: run runserver vite clean push pull update scheduler
 .DEFAULT: run
 
 
@@ -9,39 +9,25 @@ SERVER_URL = $(shell git config --get remote.server.url | cut -d ':' -f 1)
 PROJECT_NAME = $(shell basename $(PWD))
 
 
-run: check install
+run: install
 	@echo "run ----------------------------------------------------------------"
-	${MAKE} -j3 runserver webpack
+	${MAKE} -j2 runserver vite
 
 runserver:
 	uv run python manage.py runserver 0.0.0.0:8000
 
-webpack:
-	npx nodemon --watch webpack.config.js --exec \
-		'webpack --config webpack.config.js --mode development --watch --devtool source-map'
+vite:
+	bun run dev
 
 scheduler:
 	uv run python manage.py scheduler
-
-
-check:
-	@echo "check --------------------------------------------------------------"
-	@if ! which uv > /dev/null; then\
-		echo "> uv not found in PATH, please install it: https://docs.astral.sh/uv/getting-started/installation/";\
-		exit 1;\
-	fi
-	@if ! which yarn > /dev/null; then\
-		echo "> yarn not found in PATH, please make sure it's installed along with node";\
-		exit 1;\
-	fi
-	@echo "> all checks passed"
 
 
 install: node_modules/touchfile .venv/touchfile db.sqlite3
 
 node_modules/touchfile: package.json
 	@echo "install node deps --------------------------------------------------"
-	yarn install
+	bun install
 	touch $@
 	@echo "> all node deps installed"
 
@@ -71,7 +57,7 @@ pull:
 update: install
 	@echo "update -------------------------------------------------------------"
 	uv lock --upgrade
-	yarn upgrade
+	bun update --latest
 	@echo "> all deps updated"
 
 

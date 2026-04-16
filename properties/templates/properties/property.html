@@ -6,7 +6,7 @@
 {{ status_response_times_graph|json_script:"chart-status-response-times-data" }}
 {{ status_codes_graph|json_script:"chart-status-codes-data" }}
 {{ uptime_graph|json_script:"chart-uptime-data" }}
-<script src="{% static 'properties.js' %}"></script>
+<script type="module" src="{% static 'properties.js' %}"></script>
 {% endblock %}
 
 
