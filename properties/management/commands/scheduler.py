@@ -4,6 +4,7 @@ import queue
 
 from django import db
 from django.core.management.base import BaseCommand
+from django.db.models import Q
 from django.utils import timezone
 
 from properties.models import Property, Check
@@ -76,9 +77,13 @@ class Command(BaseCommand):
             if not q_status.empty():
                 threads = []
                 for i in range(2):
+                    if q_status.empty():
+                        break
                     q_data = q_status.get()
-                    if q_data[1] == "status":
-                        t = threading.Thread(target=self.thread_target, args=(q_data[0],))
+                    if q_data[1] != "status":
+                        q_status.task_done()
+                        continue
+                    t = threading.Thread(target=self.thread_target, args=(q_data[0],))
                     t.daemon = True
                     t.start()
                     threads.append(t)
@@ -88,7 +93,11 @@ class Command(BaseCommand):
             time.sleep(1)
 
     def queue_check_status(self):
-        properties = [p for p in Property.objects.all() if p.should_check()]
+        now = timezone.now()
+        due = Property.objects.filter(
+            Q(last_run_at__isnull=True) | Q(next_run_at__isnull=True) | Q(next_run_at__lte=now)
+        )
+        properties = list(due)
         for p in properties:
             p.next_run_at = p.get_next_run_at()
             p.last_run_at = timezone.now()
@@ -100,7 +109,13 @@ class Command(BaseCommand):
             self.queue_add_status(p_id, "status")
 
     def queue_check_lighthouse(self):
-        properties = [p for p in Property.objects.all() if p.should_check_lighthouse()]
+        now = timezone.now()
+        due = Property.objects.filter(
+            Q(last_lighthouse_run_at__isnull=True)
+            | Q(next_lighthouse_run_at__isnull=True)
+            | Q(next_lighthouse_run_at__lte=now)
+        )
+        properties = list(due)
         for p in properties:
             p.next_lighthouse_run_at = p.get_next_run_at_lighthouse()
             p.last_lighthouse_run_at = timezone.now()
@@ -112,7 +127,13 @@ class Command(BaseCommand):
             self.queue_add(p_id, "lighthouse")
 
     def queue_check_crawler(self):
-        properties = [p for p in Property.objects.all() if p.should_check_crawl()]
+        now = timezone.now()
+        due = Property.objects.filter(
+            Q(last_run_at_crawler__isnull=True)
+            | Q(next_run_at_crawler__isnull=True)
+            | Q(next_run_at_crawler__lte=now)
+        )
+        properties = list(due)
         for p in properties:
             p.next_run_at_crawler = p.get_next_run_at_crawl()
             p.last_run_at_crawler = timezone.now()
