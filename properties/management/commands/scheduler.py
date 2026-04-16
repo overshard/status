@@ -44,10 +44,16 @@ class Command(BaseCommand):
         q_status.put((property_id, property_type))
 
     def queue_process(self):
+        # Cap on join() so a wedged lighthouse/crawler can't freeze the queue
+        # indefinitely. Must exceed status.lighthouse.SUBPROCESS_TIMEOUT_SECONDS
+        # so a normal slow run still completes inside the window.
+        JOIN_TIMEOUT = 300
         while True:
             if not q.empty():
                 threads = []
                 for i in range(2):
+                    if q.empty():
+                        break
                     q_data = q.get()
                     if q_data[1] == "lighthouse":
                         t = threading.Thread(target=self.thread_target_lighthouse, args=(q_data[0],))
@@ -57,7 +63,11 @@ class Command(BaseCommand):
                     t.start()
                     threads.append(t)
                 for t in threads:
-                    t.join()
+                    t.join(timeout=JOIN_TIMEOUT)
+                    if t.is_alive():
+                        self.stdout.write(
+                            "[Scheduler] Thread still running after {}s, abandoning".format(JOIN_TIMEOUT)
+                        )
                     q.task_done()
             time.sleep(1)
 

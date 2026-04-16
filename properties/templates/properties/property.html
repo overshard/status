@@ -129,6 +129,18 @@
 </div>
 {% endif %}
 
+{% if property.last_lighthouse_error and user.is_authenticated %}
+<div class="container-fluid mb-4">
+  <div class="alert alert-warning mb-0" role="alert">
+    <strong>Last Lighthouse run failed:</strong>
+    <code>{{ property.last_lighthouse_error }}</code>
+    {% if property.last_lighthouse_run_at %}
+      <span class="text-muted small d-block">attempted {{ property.last_lighthouse_run_at|timesince }} ago</span>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
 <div class="container mt-4">
   <div class="row">
     <div class="col-12 col-md-8">
