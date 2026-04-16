@@ -43,8 +43,12 @@ def _normalize_url(url):
     return cleaned.rstrip("/") or cleaned
 
 
-def crawl(start_url):
-    """Fetch up to PAGE_CAP pages from the same host and collect metadata."""
+def crawl(start_url, progress_cb=None):
+    """Fetch up to PAGE_CAP pages from the same host and collect metadata.
+
+    `progress_cb(pages_count)` is invoked after each batch so callers can
+    surface live progress without blocking the crawl.
+    """
     session = make_session()
 
     parsed = urlparse(start_url)
@@ -122,6 +126,12 @@ def crawl(start_url):
                 # we don't refetch it on another pass.
                 seen.add(_normalize_url(r.url))
                 pages.append(page)
+
+            if progress_cb is not None:
+                try:
+                    progress_cb(len(pages))
+                except Exception:
+                    logger.exception("[crawler] progress callback failed")
 
     if time.time() >= deadline:
         logger.warning(
@@ -207,11 +217,11 @@ def _write_debug_output(crawl_result):
         logger.exception("[crawler] failed writing debug output to %s", path)
 
 
-def run_seo_spider(url):
+def run_seo_spider(url, progress_cb=None):
     """Crawl `url`, write debug output, return list of insight dicts."""
     start = time.time()
     logger.info("[crawler] starting %s", url)
-    result = crawl(url)
+    result = crawl(url, progress_cb=progress_cb)
     insights = run_checks(result)
     _write_debug_output(result)
     logger.info(

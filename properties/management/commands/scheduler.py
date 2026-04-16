@@ -23,6 +23,34 @@ class Command(BaseCommand):
         Check.objects.filter(created_at__lt=timezone.now() - timezone.timedelta(days=3)).delete()
         self.stdout.write("[Scheduler] Cleaned checks older than 3 days.")
 
+    def reset_wedged_states(self):
+        """Flip stale running/queued states back to idle.
+
+        Runs on startup (catches states left over from a crashed scheduler)
+        and each cycle (catches threads that overran JOIN_TIMEOUT).
+        """
+        now = timezone.now()
+        crawl_cutoff = now - timezone.timedelta(seconds=900)
+        lh_cutoff = now - timezone.timedelta(seconds=300)
+
+        Property.objects.filter(
+            crawl_state__in=["queued", "running"],
+        ).filter(
+            Q(crawl_started_at__isnull=True) | Q(crawl_started_at__lt=crawl_cutoff)
+        ).update(
+            crawl_state="idle",
+            last_crawl_error="Crawl timed out or was interrupted",
+        )
+
+        Property.objects.filter(
+            lighthouse_state__in=["queued", "running"],
+        ).filter(
+            Q(lighthouse_started_at__isnull=True) | Q(lighthouse_started_at__lt=lh_cutoff)
+        ).update(
+            lighthouse_state="idle",
+            last_lighthouse_error="Lighthouse run timed out or was interrupted",
+        )
+
     def thread_target(self, property_id):
         property = Property.objects.get(id=property_id)
         self.stdout.write("[Scheduler] Checking status {}".format(property.url))
@@ -115,12 +143,17 @@ class Command(BaseCommand):
             Q(last_lighthouse_run_at__isnull=True)
             | Q(next_lighthouse_run_at__isnull=True)
             | Q(next_lighthouse_run_at__lte=now)
-        )
+        ).exclude(lighthouse_state__in=["queued", "running"])
         properties = list(due)
         for p in properties:
             p.next_lighthouse_run_at = p.get_next_run_at_lighthouse()
             p.last_lighthouse_run_at = timezone.now()
-            p.save(update_fields=["next_lighthouse_run_at", "last_lighthouse_run_at"])
+            p.lighthouse_state = "queued"
+            p.save(update_fields=[
+                "next_lighthouse_run_at",
+                "last_lighthouse_run_at",
+                "lighthouse_state",
+            ])
 
         properties = [p.id for p in properties]
         db.connections.close_all()
@@ -133,12 +166,17 @@ class Command(BaseCommand):
             Q(last_run_at_crawler__isnull=True)
             | Q(next_run_at_crawler__isnull=True)
             | Q(next_run_at_crawler__lte=now)
-        )
+        ).exclude(crawl_state__in=["queued", "running"])
         properties = list(due)
         for p in properties:
             p.next_run_at_crawler = p.get_next_run_at_crawl()
             p.last_run_at_crawler = timezone.now()
-            p.save(update_fields=["next_run_at_crawler", "last_run_at_crawler"])
+            p.crawl_state = "queued"
+            p.save(update_fields=[
+                "next_run_at_crawler",
+                "last_run_at_crawler",
+                "crawl_state",
+            ])
 
         properties = [p.id for p in properties]
         db.connections.close_all()
@@ -147,6 +185,15 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self.stdout.write("[Scheduler] Starting scheduler...")
+
+        # Clear any running/queued states left over from a prior crash so
+        # that rows don't sit stuck and block new runs.
+        Property.objects.filter(crawl_state__in=["queued", "running"]).update(
+            crawl_state="idle"
+        )
+        Property.objects.filter(lighthouse_state__in=["queued", "running"]).update(
+            lighthouse_state="idle"
+        )
 
         # Start queue_process thread
         t = threading.Thread(target=self.queue_process)
@@ -163,6 +210,7 @@ class Command(BaseCommand):
             self.queue_check_status()
             self.queue_check_lighthouse()
             self.queue_check_crawler()
+            self.reset_wedged_states()
             self.clean_checks()
 
             self.stdout.write("[Scheduler] Sleeping scheduler for 30 seconds...")
