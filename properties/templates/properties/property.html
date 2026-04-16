@@ -208,25 +208,20 @@
 
 {% if property.crawler_insights %}
 <div class="container mt-4">
+  {% regroup property.crawler_insights|dictsort:"type" by type as insight_type_groups %}
+  {% for group in insight_type_groups %}
+  <h3 class="mt-4 text-capitalize">{{ group.grouper }} <small class="text-muted">({{ group.list|length }})</small></h3>
   <div class="row bg-dark text-white py-2 mb-2 rounded rounded-sm fw-bolder">
-    <div class="col-1">
-      Type
-    </div>
-    <div class="col-3">
-      URL
-    </div>
-    <div class="col-5">
-      Issue
-    </div>
-    <div class="col-3">
-      Item
-    </div>
+    <div class="col-2">Severity</div>
+    <div class="col-3">URL</div>
+    <div class="col-4">Issue</div>
+    <div class="col-3">Item</div>
   </div>
-  {% for insight in property.crawler_insights|dictsort:"url" %}
+  {% for insight in group.list|dictsort:"severity" %}
   <div class="row bg-light py-2 mb-2 rounded rounded-sm">
-    <div class="col-md-1 d-flex align-items-center">
-      <span class="badge bg-info">
-        {{ insight.type|upper }}
+    <div class="col-md-2 d-flex align-items-center">
+      <span class="badge {% if insight.severity == 'error' %}bg-danger{% elif insight.severity == 'warning' %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}">
+        {{ insight.severity|upper }}
       </span>
     </div>
     <div class="col-md-3 text-truncate">
@@ -234,13 +229,14 @@
         {{ insight.url|url_path }}
       </a>
     </div>
-    <div class="col-md-5 text-truncate" {% if insight.issue %}data-bs-toggle="tooltip" data-bs-title="{{ insight.issue }}"{% endif %}>
+    <div class="col-md-4 text-truncate" {% if insight.issue %}data-bs-toggle="tooltip" data-bs-title="{{ insight.issue }}"{% endif %}>
       {{ insight.issue }}
     </div>
     <div class="col-md-3 text-truncate" {% if insight.item %}data-bs-toggle="tooltip" data-bs-title="{{ insight.item }}"{% endif %}>
       {{ insight.item }}
     </div>
   </div>
+  {% endfor %}
   {% endfor %}
 </div>
 {% endif %}

@@ -9,8 +9,8 @@ dependencies = [
     "tzdata",
     "uvicorn",
     "whitenoise",
-    "scrapy",
-    "w3lib",
+    "beautifulsoup4",
+    "lxml",
 ]
 
 [dependency-groups]
