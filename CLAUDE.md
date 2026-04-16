@@ -9,14 +9,14 @@ Status is a self-hosted uptime monitoring and status page service. It monitors w
 ## Development Commands
 
 ```bash
-make                  # Install deps + run Django dev server + Webpack watch (parallel)
+make                  # Install deps + run Django dev server + Vite watch (parallel)
 make scheduler        # Run the monitoring scheduler (separate terminal)
 make clean            # Remove node_modules, .venv, db, media
 make pull             # Rsync production database and media locally
 make push             # Push to all git remotes
 ```
 
-Dependencies: Python (uv), Node.js (yarn). Default dev credentials: admin/admin.
+Dependencies: Python (uv), JS (bun). Node is installed only so the `lighthouse` npm CLI can run — Bun doesn't execute Lighthouse correctly (bun issue #4958). Default dev credentials: admin/admin.
 
 ### Linting (no test runner)
 
@@ -26,7 +26,7 @@ uv run isort .
 uv run flake8
 ```
 
-Black profile: 88 char lines. isort uses `profile=black`. Flake8 ignores E203. All Python tool configs are in `pyproject.toml`. ESLint: 2-space indent, double quotes, semicolons.
+Black profile: 88 char lines. isort uses `profile=black`. Flake8 ignores E203. All Python tool configs are in `pyproject.toml`.
 
 ## Architecture
 
@@ -52,14 +52,14 @@ Two states: `up` (default) and `down`. Transitions:
 
 Alerts (email + Discord webhook) only fire on state transitions, not on every check.
 
-### Frontend (Webpack)
+### Frontend (Vite)
 
-Three entry points in `webpack.config.js`:
+Three entry points in `vite.config.js`, all output to `status/static/` with stable filenames (no hashing) so templates reference them via plain `{% static %}`:
 - `status/static_src/index.js` -> base Bootstrap 5 bundle
 - `pages/static_src/index.js` -> homepage styles
 - `properties/static_src/index.js` -> Chart.js graphs, D3/Datamaps, print styles
 
-BrowserSync proxies Django at :8000. Built assets go to each app's `static/` directory.
+`bun run dev` runs `vite build --watch`; refresh the browser manually to see changes. The `fixDatamapsStrictMode` Vite plugin patches datamaps/d3v3 for ESM-strict mode at transform time.
 
 ### External Tool Wrappers
 
