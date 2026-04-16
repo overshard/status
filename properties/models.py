@@ -14,7 +14,11 @@ from django.utils.functional import cached_property
 from django.conf import settings
 from crawler.runner import run_seo_spider
 
-from status.lighthouse import fetch_lighthouse_results, parse_lighthouse_results
+from status.lighthouse import (
+    LighthouseError,
+    fetch_lighthouse_results,
+    parse_lighthouse_results,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -360,6 +364,8 @@ class Property(CrawlerMixin, AlertsMixin, SecurityMixin, models.Model):
 
     lighthouse_scores = models.JSONField(blank=True, null=True)
     last_lighthouse_run_at = models.DateTimeField(blank=True, null=True)
+    last_lighthouse_success_at = models.DateTimeField(blank=True, null=True)
+    last_lighthouse_error = models.TextField(blank=True, null=True)
     next_lighthouse_run_at = models.DateTimeField(blank=True, null=True)
 
     # Alert state tracking
@@ -453,11 +459,27 @@ class Property(CrawlerMixin, AlertsMixin, SecurityMixin, models.Model):
         try:
             results = fetch_lighthouse_results(self.url)
             scores = parse_lighthouse_results(results)
-            if scores:
-                self.lighthouse_scores = scores
-                self.save(update_fields=["lighthouse_scores"])
-        except Exception:
-            pass
+        except LighthouseError as e:
+            logger.warning("Lighthouse failed for %s: %s", self.url, e)
+            self.last_lighthouse_error = str(e)
+            self.save(update_fields=["last_lighthouse_error"])
+            return
+        except Exception as e:
+            logger.exception("Unexpected lighthouse error for %s", self.url)
+            self.last_lighthouse_error = f"{type(e).__name__}: {e}"
+            self.save(update_fields=["last_lighthouse_error"])
+            return
+
+        self.lighthouse_scores = scores
+        self.last_lighthouse_success_at = timezone.now()
+        self.last_lighthouse_error = None
+        self.save(
+            update_fields=[
+                "lighthouse_scores",
+                "last_lighthouse_success_at",
+                "last_lighthouse_error",
+            ]
+        )
 
     @property
     def total_checks(self):
