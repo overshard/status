@@ -83,7 +83,7 @@
 </div>
 
 <div class="container-fluid">
-  <div class="row mb-4">
+  <div class="row {% if not property.lighthouse_scores %}mb-4{% endif %}">
     <div class="col-6 col-md-3 d-flex align-items-center text-white {% if property.current_status == 200 %}bg-success{% else %}bg-danger{% endif %}">
       <div class="card-body text-center py-2">
         <div class="card-title h4">{% if property.current_status == 200 %}Ok{% else %}Failed{% endif %}</div>
@@ -110,6 +110,21 @@
     </div>
   </div>
 </div>
+
+{% if property.lighthouse_scores %}
+<div class="container-fluid">
+  <div class="row mb-4">
+    {% for category, score in property.lighthouse_scores.items %}
+    <div class="col-6 col-md-3 d-flex align-items-center text-white {% if score >= 80 %}bg-success{% else %}bg-warning{% endif %}">
+      <div class="card-body text-center py-2">
+        <div class="card-title h4">{{ score }}%</div>
+        <div class="card-text text-truncate small">{{ category }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
 
 {% if user.is_authenticated %}
 <form style="display:none">{% csrf_token %}</form>
@@ -258,21 +273,6 @@
     </div>
   </div>
 </div>
-
-{% if property.lighthouse_scores %}
-<div class="container-fluid">
-  <div class="row mb-4">
-    {% for category, score in property.lighthouse_scores.items %}
-    <div class="col-6 col-md-3 d-flex align-items-center text-white {% if score >= 80 %}bg-success{% else %}bg-warning{% endif %}">
-      <div class="card-body text-center py-2">
-        <div class="card-title h4">{{ score }}%</div>
-        <div class="card-text text-truncate small">{{ category }}</div>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
-</div>
-{% endif %}
 
 {% if property.lighthouse_details %}
 <div class="container mt-4">
