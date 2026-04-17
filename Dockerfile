@@ -21,7 +21,8 @@ COPY . .
 ENV PATH="/app/.venv/bin:/app/node_modules/.bin:$PATH"
 
 RUN bun run build && \
-    uv run python manage.py collectstatic --noinput
+    uv run python manage.py collectstatic --noinput && \
+    chmod +x /app/entrypoint.py
 
 RUN addgroup -S -g 1000 app && \
     adduser -S -h /app -s /sbin/nologin -u 1000 -G app app && \
