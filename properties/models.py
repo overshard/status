@@ -1,7 +1,7 @@
+import logging
 import re
 import time
 import uuid
-import logging
 
 import requests
 from django.contrib.auth import get_user_model
@@ -10,14 +10,14 @@ from django.db import models, transaction
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.functional import cached_property
-from crawler.runner import run_seo_spider
 
+from crawler.runner import run_seo_spider
 from status.lighthouse import (
     LighthouseError,
     fetch_lighthouse_results,
     parse_lighthouse_results,
+    parse_performance_details,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -184,23 +184,27 @@ class AlertsMixin:
         with transaction.atomic():
             locked = Property.objects.select_for_update().get(pk=self.pk)
 
-            if is_currently_up and locked.alert_state == 'down':
+            if is_currently_up and locked.alert_state == "down":
                 self.send_recovery_email()
                 self.send_recovery_discord_message()
-                locked.alert_state = 'up'
+                locked.alert_state = "up"
                 locked.last_alert_sent = timezone.now()
-                locked.save(update_fields=['alert_state', 'last_alert_sent'])
+                locked.save(update_fields=["alert_state", "last_alert_sent"])
                 self.alert_state = locked.alert_state
                 self.last_alert_sent = locked.last_alert_sent
-            elif not is_currently_up and locked.alert_state == 'up':
+            elif not is_currently_up and locked.alert_state == "up":
                 # Require at least 2 consecutive failures to avoid false positives.
                 checks = self.statuses.order_by("-created_at")[:2]
-                if len(checks) >= 2 and checks[0].status_code != 200 and checks[1].status_code != 200:
+                if (
+                    len(checks) >= 2
+                    and checks[0].status_code != 200
+                    and checks[1].status_code != 200
+                ):
                     self.send_down_email()
                     self.send_down_discord_message()
-                    locked.alert_state = 'down'
+                    locked.alert_state = "down"
                     locked.last_alert_sent = timezone.now()
-                    locked.save(update_fields=['alert_state', 'last_alert_sent'])
+                    locked.save(update_fields=["alert_state", "last_alert_sent"])
                     self.alert_state = locked.alert_state
                     self.last_alert_sent = locked.last_alert_sent
 
@@ -274,6 +278,7 @@ class Property(CrawlerMixin, AlertsMixin, SecurityMixin, models.Model):
     last_crawl_pages_count = models.IntegerField(blank=True, null=True)
 
     lighthouse_scores = models.JSONField(blank=True, null=True)
+    lighthouse_details = models.JSONField(blank=True, null=True)
     last_lighthouse_run_at = models.DateTimeField(blank=True, null=True)
     last_lighthouse_success_at = models.DateTimeField(blank=True, null=True)
     last_lighthouse_error = models.TextField(blank=True, null=True)
@@ -289,9 +294,7 @@ class Property(CrawlerMixin, AlertsMixin, SecurityMixin, models.Model):
     # Alert state tracking
     last_alert_sent = models.DateTimeField(blank=True, null=True)
     alert_state = models.CharField(
-        max_length=10,
-        choices=[('up', 'Up'), ('down', 'Down')],
-        default='up'
+        max_length=10, choices=[("up", "Up"), ("down", "Down")], default="up"
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -336,7 +339,7 @@ class Property(CrawlerMixin, AlertsMixin, SecurityMixin, models.Model):
             response_time = response.elapsed.total_seconds() * 1000
             status_code = response.status_code
             headers = response.headers
-        except (requests.exceptions.SSLError):
+        except requests.exceptions.SSLError:
             response_time = 10000
             status_code = 526
             headers = {}
@@ -382,6 +385,7 @@ class Property(CrawlerMixin, AlertsMixin, SecurityMixin, models.Model):
         try:
             results = fetch_lighthouse_results(self.url)
             scores = parse_lighthouse_results(results)
+            details = parse_performance_details(results)
         except LighthouseError as e:
             logger.warning("Lighthouse failed for %s: %s", self.url, e)
             Property.objects.filter(pk=self.pk).update(
@@ -401,6 +405,7 @@ class Property(CrawlerMixin, AlertsMixin, SecurityMixin, models.Model):
 
         Property.objects.filter(pk=self.pk).update(
             lighthouse_scores=scores,
+            lighthouse_details=details,
             last_lighthouse_success_at=timezone.now(),
             last_lighthouse_error=None,
             last_lighthouse_duration_ms=int((time.monotonic() - start) * 1000),
