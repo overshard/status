@@ -9,18 +9,6 @@ services:
       - /srv/data/status/:/data/
     ports:
       - "127.0.0.1:${PORT}:${PORT}"
-    command: >
-      gunicorn status.asgi:application --preload --workers 2 --max-requests 256
-      --timeout 30 --bind :${PORT} --worker-class uvicorn.workers.UvicornWorker
-      --error-logfile - --access-logfile -
-    restart: unless-stopped
-  worker:
-    container_name: status_worker
-    build: .
-    env_file: .env
-    volumes:
-      - /srv/data/status/:/data/
-    command: >
-      python3 manage.py scheduler
+    command: ./entrypoint.py
     restart: unless-stopped
     init: true
