@@ -53,10 +53,11 @@ DATABASES = {
 
 
 # Email
-# https://docs.djangoproject.com/en/4.0/topics/email/#smtp-backend
+# https://docs.djangoproject.com/en/4.0/topics/email/#email-backends
 
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "email"
+EMAIL_BACKEND = "status.mailer.DirectMXBackend"
+DEFAULT_FROM_EMAIL = "noreply@bythewood.me"
+SERVER_EMAIL = "noreply@bythewood.me"
 
 
 # Media files (Images, Videos)
