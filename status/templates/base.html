@@ -30,9 +30,12 @@
         <span class="display-1 fs-4 text-white text-decoration-none text-uppercase my-0">Status</span>
       </a>
       {% if user.is_authenticated %}
-      <a href="/accounts/logout/" class="btn btn-sm btn-outline-light">
-        Logout
-      </a>
+      <form method="post" action="{% url 'logout' %}" class="d-inline">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-sm btn-outline-light">
+          Logout
+        </button>
+      </form>
       {% else %}
       <a href="/accounts/login/" class="btn btn-sm btn-outline-light">
         Login
@@ -75,7 +78,12 @@
             {% if user.is_authenticated %}
             <li class="mb-2"><a href="/properties/" class="link-footer">Properties</a></li>
             <li class="mb-2"><a href="/accounts/profile/" class="link-footer">Profile</a></li>
-            <li class="mb-2"><a href="/accounts/logout/" class="link-footer">Logout</a></li>
+            <li class="mb-2">
+              <form method="post" action="{% url 'logout' %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-link link-footer p-0 align-baseline text-start">Logout</button>
+              </form>
+            </li>
             {% else %}
             <li class="mb-2"><a href="/accounts/login/" class="link-footer">Login</a></li>
             <li class="mb-2"><a href="/accounts/password-reset/" class="link-footer">Password reset</a></li>
