@@ -1,6 +1,7 @@
 FROM alpine:3.21
 
-ENV LANG "C.UTF-8"
+ENV LANG="C.UTF-8" \
+    PYTHONUNBUFFERED=1
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
 COPY --from=oven/bun:alpine /usr/local/bin/bun /usr/local/bin/bun
