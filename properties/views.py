@@ -1,9 +1,5 @@
-import csv
-import io
-import threading
 import uuid
 
-import requests
 from django.conf import settings
 from django.contrib import messages
 from django.core.files.storage import default_storage
@@ -139,15 +135,24 @@ def property(request, property_id):
         {"label": "Downtime", "count": downtime_pct},
     ]
 
-    if request.GET.get("report") == "":
-        context["print"] = True
-        html = render_to_string("properties/property.html", context)
-        filename = f"reports/{uuid.uuid4()}.pdf"
-        generate_pdf_from_html(html, filename)
-        with open(default_storage.path(filename), "rb") as pdf:
-            response = HttpResponse(pdf.read(), content_type="application/pdf")
-            response["Content-Disposition"] = "inline; filename=report.pdf"
+    # Report formats. `?report` (or `?report=pdf`) returns a printed PDF
+    # rendered from the light-themed report template; `?report=md` returns a
+    # plain-text Markdown report suited for piping into an LLM.
+    if "report" in request.GET:
+        fmt = request.GET.get("report") or "pdf"
+        if fmt == "md":
+            md = render_to_string("properties/property_report.md", context)
+            response = HttpResponse(md, content_type="text/markdown; charset=utf-8")
+            response["Content-Disposition"] = f'inline; filename="{property_obj.name}.md"'
             return response
+        if fmt == "pdf":
+            html = render_to_string("properties/property_report.html", context)
+            filename = f"reports/{uuid.uuid4()}.pdf"
+            generate_pdf_from_html(html, filename)
+            with open(default_storage.path(filename), "rb") as pdf:
+                response = HttpResponse(pdf.read(), content_type="application/pdf")
+                response["Content-Disposition"] = "inline; filename=report.pdf"
+                return response
 
     return render(request, "properties/property.html", context)
 
@@ -285,37 +290,3 @@ def property_rerun_lighthouse(request, property_id):
     return JsonResponse({"ok": True, **_serialize_status(property_obj)})
 
 
-def import_property(request, url):
-    url = url.lower().strip()
-    if not url.startswith("http"):
-        url = "http://" + url
-    try:
-        r = requests.get(url)
-        r.raise_for_status()
-    except requests.exceptions.RequestException:
-        return
-    if not Property.objects.filter(url=r.url).exists():
-        property_obj = Property(
-            url=r.url,
-            user=request.user,
-        )
-        property_obj.save()
-
-
-def import_properties(request):
-    if not request.user.is_authenticated:
-        return redirect("/")
-
-    if request.method == "POST":
-        file = request.FILES["csv_file"]
-        reader = csv.reader(io.TextIOWrapper(file.file, encoding="utf-8"))
-        for row in reader:
-            try:
-                url = row[0]
-                threading.Thread(target=import_property, args=(request, url)).start()
-            except IndexError:
-                continue
-        messages.success(request, "Properties imported successfully.")
-        return redirect("properties")
-
-    return redirect("properties")

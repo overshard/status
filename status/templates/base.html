@@ -14,6 +14,8 @@
   <base href="{{ BASE_URL }}">
   {% endif %}
 
+  <link rel="icon" type="image/svg+xml" href="{% url 'favicon' %}">
+
   {% block extra_head %}{% endblock %}
 
   <link href="{% static 'base.css' %}" rel="stylesheet">
@@ -24,29 +26,54 @@
   {% include 'includes/messages.html' %}
 
   {% block nav %}
-  <nav class="navbar bg-teal-900 d-print-none">
+  <nav class="navbar navbar-dark navbar-expand-md d-print-none">
     <div class="container">
-      <a class="navbar-brand text-white" href="/">
-        <span class="display-1 fs-4 text-white text-decoration-none text-uppercase my-0">Status</span>
+      <a class="navbar-brand" href="/">
+        <span class="logo" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+            <polyline points="2,34 18,34 24,28 30,14 36,52 42,20 48,34 62,34"
+              fill="none" stroke="#6b9e78" stroke-width="6"
+              stroke-linejoin="round" stroke-linecap="round"/>
+            <circle cx="30" cy="14" r="3.5" fill="#c9a84c"/>
+          </svg>
+        </span>
+        <span class="brand-text">Status</span>
+        <span class="brand-dot" aria-hidden="true"></span>
       </a>
-      {% if user.is_authenticated %}
-      <form method="post" action="{% url 'logout' %}" class="d-inline">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-sm btn-outline-light">
-          Logout
-        </button>
-      </form>
-      {% else %}
-      <a href="/accounts/login/" class="btn btn-sm btn-outline-light">
-        Login
-      </a>
-      {% endif %}
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" aria-controls="navMain" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navMain">
+        <ul class="navbar-nav ms-3">
+          {% if user.is_authenticated %}
+          <li class="nav-item"><a class="nav-link {% if request.path == '/properties/' %}active{% endif %}" href="/properties/">Properties</a></li>
+          <li class="nav-item"><a class="nav-link {% if request.path == '/accounts/profile/' %}active{% endif %}" href="/accounts/profile/">Profile</a></li>
+          {% else %}
+          <li class="nav-item"><a class="nav-link {% if request.path == '/' %}active{% endif %}" href="/">Home</a></li>
+          <li class="nav-item"><a class="nav-link {% if request.path == '/changelog/' %}active{% endif %}" href="/changelog/">Changelog</a></li>
+          {% endif %}
+        </ul>
+        <ul class="navbar-nav ms-auto">
+          {% if user.is_authenticated %}
+          <li class="nav-item d-flex align-items-center">
+            <form method="post" action="{% url 'logout' %}" class="d-inline">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-light">Logout</button>
+            </form>
+          </li>
+          {% else %}
+          <li class="nav-item d-flex align-items-center">
+            <a href="/accounts/login/" class="btn btn-sm btn-outline-light">Login</a>
+          </li>
+          {% endif %}
+        </ul>
+      </div>
     </div>
   </nav>
   {% endblock %}
 
   {% block breadcrumb_wrapper %}
-  <div class="bg-teal-800 py-2 d-print-none">
+  <div class="breadcrumb-bar py-2 overflow-auto d-print-none">
     <div class="container">
       {% block breadcrumbs %}{% endblock %}
     </div>
@@ -58,22 +85,25 @@
   </main>
 
   {% block footer %}
-  <footer class="mt-4 bg-black text-light d-print-none">
+  <footer class="d-print-none">
     <div class="container">
-      <div class="row">
-        <div class="col-12 col-md-12 col-lg-4 mb-5 mb-lg-0">
-          <div class="h5 font-monospace mb-3">Status</div>
-          <p>Made by <a href="https://isaacbythewood.com/" class="text-light">Isaac Bythewood</a>, a simple opinionated self-hosted website status monitoring solution.</p>
+      <div class="row links">
+        <div class="col-12 col-lg-6 mb-4 mb-lg-0">
+          <div class="h5 mb-3">// Status</div>
+          <p>Self-hosted website monitoring by <a href="https://isaacbythewood.com/">Isaac Bythewood</a>.
+            HTTP checks every three minutes, Lighthouse audits, SEO crawler,
+            security header analysis. Alerts via email + Discord. Own your uptime.</p>
         </div>
-        <div class="col-6 col-md-4 offset-lg-4 col-lg-2">
-          <div class="h5 font-monospace mb-3">Pages</div>
+        <div class="col-6 col-lg-2 offset-lg-2">
+          <div class="h5 mb-3">// Pages</div>
           <ul class="list-unstyled">
             <li class="mb-2"><a href="/" class="link-footer">Home</a></li>
             <li class="mb-2"><a href="/changelog/" class="link-footer">Changelog</a></li>
+            <li class="mb-2"><a href="https://github.com/overshard/status" class="link-footer" target="_blank">Source</a></li>
           </ul>
         </div>
-        <div class="col-6 col-md-4 col-lg-2">
-          <div class="h5 font-monospace mb-3">Accounts</div>
+        <div class="col-6 col-lg-2">
+          <div class="h5 mb-3">// Accounts</div>
           <ul class="list-unstyled">
             {% if user.is_authenticated %}
             <li class="mb-2"><a href="/properties/" class="link-footer">Properties</a></li>
@@ -94,21 +124,26 @@
     </div>
   </footer>
 
-  <div class="bg-dark py-2 d-print-none">
+  <div class="footer-bar d-print-none">
     <div class="container">
-      <div class="row">
-        <div class="col-sm-6 d-flex align-items-center justify-content-center justify-content-sm-start mt-3 mt-sm-0 order-1 order-sm-0">
-          <small class="text-light">
-            &copy; {% now 'Y' %} Isaac Bythewood. Some rights reserved.
-          </small>
+      <div class="row align-items-center">
+        <div class="col-sm-6 d-flex align-items-center justify-content-center justify-content-sm-start order-1 order-sm-0">
+          <small>&copy; {% now 'Y' %} Isaac Bythewood · Some rights reserved</small>
         </div>
-        <div class="col-sm-6 d-flex justify-content-center justify-content-sm-end">
-          <a href="https://github.com/overshard/status" target="_blank" class="text-light fs-3 d-flex align-items-center" aria-label="GitHub">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-github" viewBox="0 0 16 16">
+        <div class="col-sm-6 d-flex justify-content-center justify-content-sm-end py-3 py-sm-0">
+          <a href="https://github.com/overshard/status" target="_blank" class="footer-bar-link" aria-label="GitHub">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
               <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
             </svg>
           </a>
-          <a href="https://isaacbythewood.com/" target="_blank" class="logo shadow ms-4" aria-label="Isaac Bythewood"></a>
+          <a href="https://isaacbythewood.com/" target="_blank" class="logo logo-sm ms-3" aria-label="Isaac Bythewood">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+              <polyline points="2,34 18,34 24,28 30,14 36,52 42,20 48,34 62,34"
+                fill="none" stroke="#6b9e78" stroke-width="6"
+                stroke-linejoin="round" stroke-linecap="round"/>
+              <circle cx="30" cy="14" r="3.5" fill="#c9a84c"/>
+            </svg>
+          </a>
         </div>
       </div>
     </div>

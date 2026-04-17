@@ -1,3 +1,6 @@
+// fonts
+import "@fontsource/monaspace-argon";
+
 // scripts
 import "./scripts/bootstrap.js";
 

@@ -10,6 +10,5 @@ urlpatterns = [
     path('<uuid:property_id>/status/', views.property_status, name='property_status'),
     path('<uuid:property_id>/recrawl/', views.property_recrawl, name='property_recrawl'),
     path('<uuid:property_id>/rerun-lighthouse/', views.property_rerun_lighthouse, name='property_rerun_lighthouse'),
-    path('import/', views.import_properties, name='import_properties'),
     path('', views.properties, name='properties'),
 ]

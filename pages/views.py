@@ -39,8 +39,16 @@ def changelog(request):
 
 
 def favicon(request):
-    icon = "🚀"
-    svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="80" font-size="80">{icon}</text></svg>'
+    # Heartbeat/pulse mark — a single EKG-style waveform sweep, reads as
+    # "vital signs / liveness" and is distinct from bars, rings, and shells.
+    svg = (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'
+        '<polyline points="2,34 18,34 24,28 30,14 36,52 42,20 48,34 62,34" '
+        'fill="none" stroke="#6b9e78" stroke-width="6" '
+        'stroke-linejoin="round" stroke-linecap="round"/>'
+        '<circle cx="30" cy="14" r="3.5" fill="#c9a84c"/>'
+        "</svg>"
+    )
     return HttpResponse(svg, content_type="image/svg+xml")
 
 

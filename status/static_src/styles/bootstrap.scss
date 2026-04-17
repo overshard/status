@@ -1,25 +1,151 @@
-@use "bootstrap/scss/bootstrap" as *;
+@use "variables" as *;
 
+@use "bootstrap/scss/bootstrap" with (
+  $font-family-sans-serif: $font-family-sans-serif,
+  $font-family-monospace: $font-family-monospace,
+  $headings-font-family: $headings-font-family,
+  $headings-font-weight: $headings-font-weight,
+  $font-size-base: $font-size-base,
+  $line-height-base: $line-height-base,
+  $headings-line-height: $headings-line-height,
+
+  $white: $white,
+  $gray-100: $gray-100,
+  $gray-200: $gray-200,
+  $gray-300: $gray-300,
+  $gray-400: $gray-400,
+  $gray-500: $gray-500,
+  $gray-600: $gray-600,
+  $gray-700: $gray-700,
+  $gray-800: $gray-800,
+  $gray-900: $gray-900,
+  $black: $black,
+
+  $body-bg: $body-bg,
+  $body-color: $body-color,
+
+  $primary: $primary,
+  $secondary: $secondary,
+  $success: $success,
+  $info: $info,
+  $warning: $warning,
+  $danger: $danger,
+  $light: $light,
+  $dark: $dark,
+
+  $link-color: $link-color,
+  $link-hover-color: $link-hover-color,
+  $link-decoration: $link-decoration,
+  $link-hover-decoration: $link-hover-decoration,
+
+  $border-color: $border-color,
+  $border-radius: $border-radius,
+  $border-radius-sm: $border-radius-sm,
+  $border-radius-lg: $border-radius-lg,
+
+  $card-bg: $card-bg,
+  $card-border-color: $card-border-color,
+  $card-color: $card-color,
+  $card-cap-bg: $card-cap-bg,
+
+  $input-bg: $input-bg,
+  $input-color: $input-color,
+  $input-border-color: $input-border-color,
+  $input-focus-bg: $input-focus-bg,
+  $input-focus-color: $input-focus-color,
+  $input-focus-border-color: $input-focus-border-color,
+  $input-focus-box-shadow: $input-focus-box-shadow,
+  $input-placeholder-color: $input-placeholder-color,
+
+  $navbar-dark-color: $navbar-dark-color,
+  $navbar-dark-hover-color: $navbar-dark-hover-color,
+  $navbar-dark-active-color: $navbar-dark-active-color,
+
+  $list-group-bg: $list-group-bg,
+  $list-group-border-color: $list-group-border-color,
+  $list-group-hover-bg: $list-group-hover-bg,
+  $list-group-action-color: $list-group-action-color,
+  $list-group-action-hover-color: $list-group-action-hover-color,
+  $list-group-action-active-bg: $list-group-action-active-bg,
+  $list-group-action-active-color: $list-group-action-active-color,
+  $list-group-active-bg: $list-group-active-bg,
+  $list-group-active-border-color: $list-group-active-border-color,
+  $list-group-active-color: $list-group-active-color,
+
+  $breadcrumb-active-color: $breadcrumb-active-color,
+  $breadcrumb-divider-color: $breadcrumb-divider-color,
+
+  $dropdown-bg: $dropdown-bg,
+  $dropdown-border-color: $dropdown-border-color,
+  $dropdown-color: $dropdown-color,
+  $dropdown-link-color: $dropdown-link-color,
+  $dropdown-link-hover-color: $dropdown-link-hover-color,
+  $dropdown-link-hover-bg: $dropdown-link-hover-bg,
+
+  $btn-close-color: $btn-close-color,
+
+  $modal-content-bg: $modal-content-bg,
+  $modal-content-border-color: $modal-content-border-color,
+  $modal-header-border-color: $modal-header-border-color,
+  $modal-footer-border-color: $modal-footer-border-color,
+  $modal-backdrop-bg: $modal-backdrop-bg,
+  $modal-backdrop-opacity: $modal-backdrop-opacity,
+
+  $progress-bg: $progress-bg,
+  $progress-bar-bg: $progress-bar-bg,
+
+  $table-bg: $table-bg,
+  $table-color: $table-color,
+  $table-border-color: $table-border-color,
+);
+
+
+// ── Surface utilities ──
+
+.bg-surface {
+  background: #13120e !important;
+}
+
+.bg-surface-2 {
+  background: #18160f !important;
+}
+
+.bg-deep {
+  background: #09080626 !important; // very subtle warm black
+}
+
+.bg-deep,
 .bg-black {
-  background-color: $black !important;
+  background-color: #090806 !important;
 }
 
-.bg-teal-900 {
-  background-color: $teal-900 !important;
+.border-subtle {
+  border-color: rgba(107, 158, 120, 0.1) !important;
 }
 
-.bg-teal-800 {
-  background-color: $teal-800 !important;
+.text-muted {
+  color: #9e968a !important;
 }
+
+.text-green {
+  color: $green-bright !important;
+}
+
+.text-amber {
+  color: $amber !important;
+}
+
+// Legacy utility aliases used by existing templates
+.bg-teal-900 { background-color: #090806 !important; }
+.bg-teal-800 { background-color: #0e0d0a !important; }
 
 .link-footer {
-  color: $gray-500;
+  color: $gray-400;
   text-decoration: none;
-  transition: color 100ms ease-in-out;
+  transition: color 200ms ease;
 
   &:hover {
     color: $white;
-    text-decoration: underline;
   }
 }
 
@@ -27,24 +153,161 @@
   display: block;
   flex-wrap: nowrap;
   white-space: nowrap;
+  margin-bottom: 0;
 
   .breadcrumb-item {
-    font-size: 0.9em;
+    font-size: 0.82em;
     white-space: nowrap;
     display: inline-block;
 
     a {
-      color: $gray-500;
+      color: $gray-400;
       text-decoration: none;
-      transition: color .15s ease-in-out;
+      transition: color 150ms ease;
 
       &:hover {
-        color: $gray-200;
+        color: $green-bright;
       }
     }
 
     &.active {
-      color: $white;
+      color: $gray-200;
     }
   }
+}
+
+// Buttons — flat, no glow
+.btn {
+  letter-spacing: 0.02em;
+  font-weight: 500;
+  transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease;
+}
+
+.btn-primary {
+  color: #0b0a08;
+  background: $green;
+  border-color: $green;
+
+  &:hover,
+  &:focus {
+    color: #0b0a08;
+    background: $green-bright;
+    border-color: $green-bright;
+  }
+}
+
+.btn-success {
+  color: #0b0a08;
+  background: $green;
+  border-color: $green;
+
+  &:hover,
+  &:focus {
+    color: #0b0a08;
+    background: $green-bright;
+    border-color: $green-bright;
+  }
+}
+
+.btn-outline-light {
+  border-color: rgba(221, 215, 205, 0.18);
+  color: $gray-200;
+
+  &:hover,
+  &:focus {
+    background: rgba(221, 215, 205, 0.05);
+    border-color: rgba(221, 215, 205, 0.35);
+    color: $white;
+  }
+}
+
+.btn-outline-danger {
+  color: $terracotta;
+  border-color: $terracotta-border;
+
+  &:hover,
+  &:focus {
+    background: $terracotta-dim;
+    color: #d88870;
+    border-color: rgba(196, 112, 85, 0.4);
+  }
+}
+
+.btn-link {
+  color: $green-bright;
+}
+
+// Alerts for dark
+.alert { border-radius: $border-radius; }
+
+.alert-info {
+  background: rgba(126, 170, 184, 0.08);
+  border-color: rgba(126, 170, 184, 0.2);
+  color: #9ec5d2;
+}
+
+.alert-warning {
+  background: $amber-dim;
+  border-color: $amber-border;
+  color: #ddc06a;
+}
+
+.alert-danger {
+  background: $terracotta-dim;
+  border-color: $terracotta-border;
+  color: #e38871;
+}
+
+.alert-success {
+  background: $green-dim;
+  border-color: $green-border;
+  color: $green-bright;
+}
+
+// Forms
+.form-control,
+.form-select {
+  background-color: $input-bg;
+  border-color: $input-border-color;
+  color: $input-color;
+
+  &:focus {
+    background-color: $input-focus-bg;
+  }
+}
+
+.form-floating > label {
+  color: #665f56;
+}
+
+// Badges
+.badge {
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  padding: 0.35em 0.55em;
+}
+
+// Pagination
+.page-link {
+  background: $card-bg;
+  border-color: $card-border-color;
+  color: $gray-300;
+
+  &:hover {
+    background: #1a1812;
+    border-color: $green-border;
+    color: $green-bright;
+  }
+}
+
+.page-item.active .page-link {
+  background: $green-dim;
+  border-color: $green-border;
+  color: $green-bright;
+}
+
+.page-item.disabled .page-link {
+  background: $card-bg;
+  border-color: $card-border-color;
+  color: #4a443c;
 }

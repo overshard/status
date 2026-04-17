@@ -16,7 +16,7 @@
 
 
 {% block breadcrumbs %}
-<nav style="--bs-breadcrumb-divider: url(&#34;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='%236c757d'/%3E%3C/svg%3E&#34;);" aria-label="breadcrumb">
+<nav aria-label="breadcrumb">
   <ol class="breadcrumb mb-0">
     <li class="breadcrumb-item"><a href="/">Home</a></li>
     <li class="breadcrumb-item"><a href="/properties/">Properties</a></li>
@@ -27,113 +27,115 @@
 
 
 {% block main %}
-<div class="bg-dark text-white py-2">
+<div class="bg-deep border-bottom border-subtle py-4">
   <div class="container">
-    <div class="row">
-      <div class="col-12 col-lg-5">
-        <div class="d-flex align-items-center">
-          <h1 class="me-3 display-5 text-truncate">{{ title }}</h1>
-        </div>
+    <div class="row align-items-center g-3">
+      <div class="col-12 col-lg-6">
+        <div class="section-label mb-2">property · <span class="text-green">{% if property.current_status == 200 %}online{% else %}offline{% endif %}</span></div>
+        <h1 class="mb-1 text-white fw-bolder d-flex align-items-center gap-3" style="letter-spacing: -0.01em; min-width: 0;">
+          <span class="text-truncate">{{ property.name }}</span>
+          <span class="status-dot status-dot-lg {% if property.current_status == 200 %}is-up{% else %}is-down{% endif %}" aria-hidden="true"></span>
+        </h1>
+        <a href="{{ property.url }}" target="_blank" class="text-muted small text-decoration-none" style="font-family: var(--bs-font-monospace);">{{ property.url }} ↗</a>
       </div>
-      <div class="col-12 col-lg-7 d-flex align-items-center justify-content-lg-end">
-        <div class="d-lg-flex my-lg-0 d-print-none">
-          {% if user.is_authenticated %}
-          <form id="is-public-form" method="POST" class="d-flex align-items-center">
-            {% csrf_token %}
-            <div class="form-check form-switch my-1">
-              <input class="form-check-input" type="checkbox" role="switch" name="is_public" id="is-public-switch" {% if property.is_public %}checked{% endif %}>
-              <label class="form-check-label" for="{{ custom_event.event|slugify }}-switch">
-                <span class="badge bg-warning text-dark rounded-pill" data-bs-placement="bottom" data-bs-toggle="tooltip" title="Anyone with the URL will have access to this property, you can disable at anytime.">?</span>
-                Public Property
-              </label>
-            </div>
-          </form>
-          {% endif %}
-          {% if user.is_authenticated %}
-          <a href="{% url 'property' property.id %}?report" target="_blank" class="btn btn-sm btn-primary ms-0 ms-lg-3 my-1">
-            Report
-          </a>
-          {% endif %}
-          {% if not property.is_protected and user.is_authenticated %}
-          <button type="button" class="btn btn-sm btn-outline-danger ms-1 ms-lg-3 my-1" data-bs-toggle="modal" data-bs-target="#delete-modal-{{ property.id }}">
-            Delete
-          </button>
-          <div class="modal fade text-dark" id="delete-modal-{{ property.id }}" tabindex="-1" aria-labelledby="delete-modal-{{ property.id }}-label" aria-hidden="true">
-            <div class="modal-dialog">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title" id="delete-modal-{{ property.id }}-label">Confirm property delete</h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                  Are you sure you want to delete <strong>{{ property.name }}</strong>?
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">I've changed my mind</button>
-                  <a href="{% url 'property_delete' property.id %}" class="btn btn-danger">Confirm</a>
-                </div>
+      <div class="col-12 col-lg-6 d-flex flex-wrap gap-2 justify-content-lg-end align-items-center d-print-none">
+        {% if user.is_authenticated %}
+        <form id="is-public-form" method="POST" class="d-inline-flex align-items-center gap-2">
+          {% csrf_token %}
+          <span class="toggle-label" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Public properties are viewable by anyone with the URL — no login required.">Visibility</span>
+          <label class="toggle-pill">
+            <input type="checkbox" name="is_public" id="is-public-switch" {% if property.is_public %}checked{% endif %}>
+            <span class="toggle-pill-seg toggle-pill-private">Private</span>
+            <span class="toggle-pill-seg toggle-pill-public">Public</span>
+          </label>
+        </form>
+        <a href="{% url 'property' property.id %}?report" target="_blank" class="btn btn-sm btn-outline-light">Report · pdf</a>
+        <a href="{% url 'property' property.id %}?report=md" target="_blank" class="btn btn-sm btn-outline-light">Report · md</a>
+        {% if not property.is_protected %}
+        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#delete-modal-{{ property.id }}">
+          Delete
+        </button>
+        <div class="modal fade" id="delete-modal-{{ property.id }}" tabindex="-1" aria-labelledby="delete-modal-{{ property.id }}-label" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title text-white" id="delete-modal-{{ property.id }}-label">Confirm delete</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                Delete <strong class="text-white">{{ property.name }}</strong>? All probe and audit data will be removed.
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
+                <a href="{% url 'property_delete' property.id %}" class="btn btn-outline-danger">Delete</a>
               </div>
             </div>
           </div>
-          {% endif %}
         </div>
+        {% endif %}
+        {% endif %}
       </div>
     </div>
   </div>
 </div>
 
-<div class="container-fluid">
-  <div class="row {% if not property.lighthouse_scores %}mb-4{% endif %}">
-    <div class="col-6 col-md-3 d-flex align-items-center text-white {% if property.current_status == 200 %}bg-success{% else %}bg-danger{% endif %}">
-      <div class="card-body text-center py-2">
-        <div class="card-title h4">{% if property.current_status == 200 %}Ok{% else %}Failed{% endif %}</div>
-        <div class="card-text text-truncate small">Current status</div>
+<div class="container my-4">
+  <div class="section-label mb-2">live signals</div>
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="metric-tile {% if property.current_status == 200 %}metric-accent-green{% else %}metric-accent-danger{% endif %}">
+        <div class="metric-label">http status</div>
+        <div class="metric-value">{% if property.current_status == 200 %}200{% else %}{{ property.current_status }}{% endif %}</div>
+        <div class="metric-sub">{% if property.current_status == 200 %}OK · all clear{% else %}failing{% endif %}</div>
       </div>
     </div>
-    <div class="col-6 col-md-3 d-flex align-items-center text-white {% if not property.invalid_cert %}bg-success{% else %}bg-danger{% endif %}">
-      <div class="card-body text-center py-2">
-        <div class="card-title h4">{% if not property.invalid_cert %}Ok{% else %}Unhealthy{% endif %}</div>
-        <div class="card-text text-truncate small">Certificate</div>
+    <div class="col-6 col-md-3">
+      <div class="metric-tile {% if property.invalid_cert %}metric-accent-danger{% else %}metric-accent-green{% endif %}">
+        <div class="metric-label">tls cert</div>
+        <div class="metric-value" style="font-size: 1.4rem;">{% if property.invalid_cert %}invalid{% else %}valid{% endif %}</div>
+        <div class="metric-sub">chain + trust</div>
       </div>
     </div>
-    <div class="col-6 col-md-3 d-flex align-items-center text-white {% if not property.has_security_issue %}bg-success{% else %}bg-danger{% endif %}">
-      <div class="card-body text-center py-2">
-        <div class="card-title h4">{% if not property.has_security_issue %}Ok{% else %}Failed{% endif %}</div>
-        <div class="card-text text-truncate small">Security</div>
+    <div class="col-6 col-md-3">
+      <div class="metric-tile {% if property.has_security_issue %}metric-accent-amber{% else %}metric-accent-green{% endif %}">
+        <div class="metric-label">security</div>
+        <div class="metric-value" style="font-size: 1.4rem;">{% if property.has_security_issue %}issues{% else %}pass{% endif %}</div>
+        <div class="metric-sub">header scan</div>
       </div>
     </div>
-    <div class="col-6 col-md-3 d-flex align-items-center text-white {% if property.avg_response_time > 500 %}bg-danger{% else %}bg-success{% endif %}">
-      <div class="card-body text-center py-2">
-        <div class="card-title h4">{% if property.avg_response_time > 500 %}Unhealthy{% else %}Ok{% endif %}</div>
-        <div class="card-text text-truncate small">Response time</div>
+    <div class="col-6 col-md-3">
+      <div class="metric-tile {% if property.avg_response_time > 500 %}metric-accent-danger{% else %}metric-accent-green{% endif %}">
+        <div class="metric-label">response</div>
+        <div class="metric-value">{{ property.avg_response_time }}<span style="font-size: 0.9rem; color: #89918c;">ms</span></div>
+        <div class="metric-sub">rolling avg</div>
       </div>
     </div>
   </div>
-</div>
 
-{% if property.lighthouse_scores %}
-<div class="container-fluid">
-  <div class="row mb-4">
+  {% if property.lighthouse_scores %}
+  <div class="section-label mb-2">lighthouse</div>
+  <div class="row g-3 mb-4">
     {% for category, score in property.lighthouse_scores.items %}
-    <div class="col-6 col-md-3 d-flex align-items-center text-white {% if score >= 80 %}bg-success{% else %}bg-warning{% endif %}">
-      <div class="card-body text-center py-2">
-        <div class="card-title h4">{{ score }}%</div>
-        <div class="card-text text-truncate small">{{ category }}</div>
+    <div class="col-6 col-md-3">
+      <div class="metric-tile {% if score >= 90 %}metric-accent-green{% elif score >= 50 %}metric-accent-amber{% else %}metric-accent-danger{% endif %}">
+        <div class="metric-label">{{ category }}</div>
+        <div class="metric-value">{{ score }}<span style="font-size: 0.9rem; color: #89918c;">%</span></div>
       </div>
     </div>
     {% endfor %}
   </div>
+  {% endif %}
 </div>
-{% endif %}
 
 {% if user.is_authenticated %}
 <form style="display:none">{% csrf_token %}</form>
-<div class="container mt-4 d-print-none" id="monitoring-status" data-property-id="{{ property.id }}" data-status-url="{% url 'property_status' property.id %}" data-recrawl-url="{% url 'property_recrawl' property.id %}" data-rerun-lighthouse-url="{% url 'property_rerun_lighthouse' property.id %}">
+<div class="container my-4 d-print-none" id="monitoring-status" data-property-id="{{ property.id }}" data-status-url="{% url 'property_status' property.id %}" data-recrawl-url="{% url 'property_recrawl' property.id %}" data-rerun-lighthouse-url="{% url 'property_rerun_lighthouse' property.id %}">
+  <div class="section-label mb-2">scheduled audits</div>
   <div class="row g-3">
     <div class="col-12 col-md-6">
-      <div class="card h-100">
-        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-          <strong>Crawler</strong>
+      <div class="monitor-card h-100">
+        <div class="monitor-header">
+          <span class="monitor-title">Crawler</span>
           <span class="d-flex align-items-center gap-2">
             <span class="badge" data-field="crawler.state_badge">&nbsp;</span>
             <button type="button" id="recrawl-btn" class="btn btn-sm btn-outline-light py-0" title="Recrawl now">
@@ -142,40 +144,35 @@
             </button>
           </span>
         </div>
-        <div class="card-body">
-          <div class="progress mb-3 d-none" data-field="crawler.progress_wrap" style="height: 6px;">
+        <div class="monitor-body">
+          <div class="progress mb-3 d-none" data-field="crawler.progress_wrap" style="height: 4px;">
             <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" data-field="crawler.progress_bar" style="width: 0%"></div>
           </div>
           <div class="alert alert-danger py-2 mb-3 d-none small" data-field="crawler.error_box" role="alert">
             <strong>Last crawl failed:</strong>
             <code data-field="crawler.error_text"></code>
           </div>
-          <dl class="row small mb-0">
-            <dt class="col-5 col-sm-5 text-muted">Last success</dt>
-            <dd class="col-7 col-sm-7 mb-1" data-field="crawler.last_success">—</dd>
-
-            <dt class="col-5 col-sm-5 text-muted">Last attempt</dt>
-            <dd class="col-7 col-sm-7 mb-1" data-field="crawler.last_attempt">—</dd>
-
-            <dt class="col-5 col-sm-5 text-muted">Pages crawled</dt>
-            <dd class="col-7 col-sm-7 mb-1" data-field="crawler.pages">—</dd>
-
-            <dt class="col-5 col-sm-5 text-muted">Duration</dt>
-            <dd class="col-7 col-sm-7 mb-1" data-field="crawler.duration">—</dd>
-
-            <dt class="col-5 col-sm-5 text-muted">Issues found</dt>
-            <dd class="col-7 col-sm-7 mb-1" data-field="crawler.insights">—</dd>
-
-            <dt class="col-5 col-sm-5 text-muted">Next run</dt>
-            <dd class="col-7 col-sm-7 mb-0" data-field="crawler.next_run">—</dd>
+          <dl>
+            <dt>Last success</dt>
+            <dd data-field="crawler.last_success">—</dd>
+            <dt>Last attempt</dt>
+            <dd data-field="crawler.last_attempt">—</dd>
+            <dt>Pages crawled</dt>
+            <dd data-field="crawler.pages">—</dd>
+            <dt>Duration</dt>
+            <dd data-field="crawler.duration">—</dd>
+            <dt>Issues found</dt>
+            <dd data-field="crawler.insights">—</dd>
+            <dt>Next run</dt>
+            <dd data-field="crawler.next_run">—</dd>
           </dl>
         </div>
       </div>
     </div>
     <div class="col-12 col-md-6">
-      <div class="card h-100">
-        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-          <strong>Lighthouse</strong>
+      <div class="monitor-card h-100">
+        <div class="monitor-header">
+          <span class="monitor-title">Lighthouse</span>
           <span class="d-flex align-items-center gap-2">
             <span class="badge" data-field="lighthouse.state_badge">&nbsp;</span>
             <button type="button" id="rerun-lighthouse-btn" class="btn btn-sm btn-outline-light py-0" title="Rerun Lighthouse now">
@@ -184,23 +181,20 @@
             </button>
           </span>
         </div>
-        <div class="card-body">
+        <div class="monitor-body">
           <div class="alert alert-warning py-2 mb-3 d-none small" data-field="lighthouse.error_box" role="alert">
             <strong>Last Lighthouse run failed:</strong>
             <code data-field="lighthouse.error_text"></code>
           </div>
-          <dl class="row small mb-0">
-            <dt class="col-5 col-sm-5 text-muted">Last success</dt>
-            <dd class="col-7 col-sm-7 mb-1" data-field="lighthouse.last_success">—</dd>
-
-            <dt class="col-5 col-sm-5 text-muted">Last attempt</dt>
-            <dd class="col-7 col-sm-7 mb-1" data-field="lighthouse.last_attempt">—</dd>
-
-            <dt class="col-5 col-sm-5 text-muted">Duration</dt>
-            <dd class="col-7 col-sm-7 mb-1" data-field="lighthouse.duration">—</dd>
-
-            <dt class="col-5 col-sm-5 text-muted">Next run</dt>
-            <dd class="col-7 col-sm-7 mb-0" data-field="lighthouse.next_run">—</dd>
+          <dl>
+            <dt>Last success</dt>
+            <dd data-field="lighthouse.last_success">—</dd>
+            <dt>Last attempt</dt>
+            <dd data-field="lighthouse.last_attempt">—</dd>
+            <dt>Duration</dt>
+            <dd data-field="lighthouse.duration">—</dd>
+            <dt>Next run</dt>
+            <dd data-field="lighthouse.next_run">—</dd>
           </dl>
         </div>
       </div>
@@ -209,89 +203,91 @@
 </div>
 {% endif %}
 
-<div class="container mt-4">
-  <div class="row">
+<div class="container my-4">
+  <div class="row g-3">
     <div class="col-12 col-md-8">
-      <div class="row">
-        <div class="col-12">
-          <div class="bg-light mb-4 p-2 rounded">
-            <canvas id="chart-response-times" height="300" width="100%"></canvas>
-          </div>
+      <div class="chart-panel mb-3">
+        <div class="chart-panel-header">
+          <span class="chart-panel-title">response time · last 31 checks</span>
+        </div>
+        <div style="position: relative; height: 300px;">
+          <canvas id="chart-response-times"></canvas>
         </div>
       </div>
-      <div class="row" id="doughnut-graphs">
+      <div class="row g-3">
         <div class="col-12 col-md-6">
-          <div class="bg-light mb-4 p-2 rounded">
+          <div class="chart-panel">
+            <div class="chart-panel-header">
+              <span class="chart-panel-title">status codes</span>
+            </div>
             <canvas id="chart-status-codes"></canvas>
           </div>
         </div>
         <div class="col-12 col-md-6">
-          <div class="bg-light mb-4 p-2 rounded">
+          <div class="chart-panel">
+            <div class="chart-panel-header">
+              <span class="chart-panel-title">uptime split</span>
+            </div>
             <canvas id="chart-uptime"></canvas>
           </div>
         </div>
       </div>
     </div>
     <div class="col-12 col-md-4">
-      <ul class="list-group mb-4">
-        <li class="list-group-item bg-dark text-white">
-          <strong>Security</strong>
-        </li>
-        <li class="list-group-item d-flex justify-content-between bg-light border-white border-start-0 border-end-0">
-          <span>Use HTTPS</span>
-          <span class="badge {% if property.is_https %}bg-success{% else %}bg-danger{% endif %}">{{ property.is_https }}</span>
-        </li>
-        <li class="list-group-item d-flex justify-content-between bg-light border-white border-start-0 border-end-0">
-          <span>Set MIME types</span>
-          <span class="badge {% if property.has_mime_type %}bg-success{% else %}bg-danger{% endif %}">{{ property.has_mime_type }}</span>
-        </li>
-        <li class="list-group-item d-flex justify-content-between bg-light border-white border-start-0 border-end-0">
-          <span>Use content sniffing protection</span>
-          <span class="badge {% if property.has_content_sniffing_protection %}bg-success{% else %}bg-danger{% endif %}">{{ property.has_content_sniffing_protection }}</span>
-        </li>
-        <li class="list-group-item d-flex justify-content-between bg-light border-white border-start-0 border-end-0">
-          <span>Use clickjack protection</span>
-          <span class="badge {% if property.has_clickjack_protection %}bg-success{% else %}bg-danger{% endif %}">{{ property.has_clickjack_protection }}</span>
-        </li>
-        <li class="list-group-item d-flex justify-content-between bg-light border-white border-start-0 border-end-0">
-          <span>Use XSS protection</span>
-          <span class="badge {% if property.has_xss_protection %}bg-success{% else %}bg-danger{% endif %}">{{ property.has_xss_protection }}</span>
-        </li>
-        <li class="list-group-item d-flex justify-content-between bg-light border-white border-start-0 border-end-0">
-          <span>Hide server version data</span>
-          <span class="badge {% if property.hides_server_version %}bg-success{% else %}bg-danger{% endif %}">{{ property.hides_server_version }}</span>
-        </li>
-        <li class="list-group-item d-flex justify-content-between bg-light border-white border-start-0 border-end-0">
-          <span>Use HSTS</span>
-          <span class="badge {% if property.has_hsts %}bg-success{% else %}bg-danger{% endif %}">{{ property.has_hsts }}</span>
-        </li>
-        <li class="list-group-item d-flex justify-content-between bg-light border-white border-start-0 border-end-0">
-          <span>Use HSTS preload</span>
-          <span class="badge {% if property.has_hsts_preload %}bg-success{% else %}bg-danger{% endif %}">{{ property.has_hsts_preload }}</span>
-        </li>
-      </ul>
+      <div class="check-list">
+        <div class="check-list-header">security · header scan</div>
+        <div class="check-list-item">
+          <span class="check-name">Use HTTPS</span>
+          <span class="chip {% if property.is_https %}chip-ok{% else %}chip-down{% endif %}">{% if property.is_https %}pass{% else %}fail{% endif %}</span>
+        </div>
+        <div class="check-list-item">
+          <span class="check-name">Set MIME types</span>
+          <span class="chip {% if property.has_mime_type %}chip-ok{% else %}chip-down{% endif %}">{% if property.has_mime_type %}pass{% else %}fail{% endif %}</span>
+        </div>
+        <div class="check-list-item">
+          <span class="check-name">Content sniff protection</span>
+          <span class="chip {% if property.has_content_sniffing_protection %}chip-ok{% else %}chip-down{% endif %}">{% if property.has_content_sniffing_protection %}pass{% else %}fail{% endif %}</span>
+        </div>
+        <div class="check-list-item">
+          <span class="check-name">Clickjack protection</span>
+          <span class="chip {% if property.has_clickjack_protection %}chip-ok{% else %}chip-down{% endif %}">{% if property.has_clickjack_protection %}pass{% else %}fail{% endif %}</span>
+        </div>
+        <div class="check-list-item">
+          <span class="check-name">XSS protection</span>
+          <span class="chip {% if property.has_xss_protection %}chip-ok{% else %}chip-down{% endif %}">{% if property.has_xss_protection %}pass{% else %}fail{% endif %}</span>
+        </div>
+        <div class="check-list-item">
+          <span class="check-name">Hide server version</span>
+          <span class="chip {% if property.hides_server_version %}chip-ok{% else %}chip-down{% endif %}">{% if property.hides_server_version %}pass{% else %}fail{% endif %}</span>
+        </div>
+        <div class="check-list-item">
+          <span class="check-name">HSTS enabled</span>
+          <span class="chip {% if property.has_hsts %}chip-ok{% else %}chip-down{% endif %}">{% if property.has_hsts %}pass{% else %}fail{% endif %}</span>
+        </div>
+        <div class="check-list-item">
+          <span class="check-name">HSTS preload</span>
+          <span class="chip {% if property.has_hsts_preload %}chip-ok{% else %}chip-down{% endif %}">{% if property.has_hsts_preload %}pass{% else %}fail{% endif %}</span>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
 {% if property.lighthouse_details %}
-<div class="container mt-4">
-  <h3 class="mt-4">Performance breakdown</h3>
+<div class="container my-4">
+  <div class="section-label mb-2">performance breakdown</div>
   <p class="text-muted small mb-3">
-    Lighthouse combines these weighted metrics to produce the Performance score. The opportunities below are the biggest wins — savings are estimated against the audited URL only.
+    Lighthouse combines these weighted metrics to produce the Performance score. Opportunities below are the biggest wins — savings are estimated against the audited URL only.
   </p>
 
   {% if property.lighthouse_details.metrics %}
-  <div class="row mb-4">
+  <div class="row g-3 mb-4">
     {% for metric in property.lighthouse_details.metrics %}
     <div class="col-6 col-md d-flex">
-      <div class="card w-100 mb-2">
-        <div class="card-body text-center py-2 border-top border-4 border-{{ metric.score|lh_score_class }}">
-          <div class="card-title h5 mb-0">{{ metric.display_value|default:"—" }}</div>
-          <div class="card-text text-truncate small" title="{{ metric.title }}">
-            {{ metric.acronym }} <span class="text-muted">· {{ metric.weight }}%</span>
-          </div>
-        </div>
+      <div class="metric-tile w-100 {% if metric.score >= 0.9 %}metric-accent-green{% elif metric.score >= 0.5 %}metric-accent-amber{% else %}metric-accent-danger{% endif %}">
+        <div class="metric-label">{{ metric.acronym }} · {{ metric.weight }}%</div>
+        <div class="metric-value" style="font-size: 1.2rem;">{{ metric.display_value|default:"—" }}</div>
+        <div class="metric-sub" title="{{ metric.title }}">{{ metric.title }}</div>
       </div>
     </div>
     {% endfor %}
@@ -299,64 +295,64 @@
   {% endif %}
 
   {% if property.lighthouse_details.opportunities %}
-  <h4 class="mt-4">Top opportunities</h4>
-  <div class="row bg-dark text-white py-2 mb-2 rounded rounded-sm fw-bolder">
-    <div class="col-2 col-md-1">Score</div>
-    <div class="col-6 col-md-7">Audit</div>
-    <div class="col-4 col-md-2">Detail</div>
-    <div class="col-12 col-md-2 text-md-end">Est. savings</div>
+  <div class="section-label mb-2">top opportunities</div>
+  <div class="insight-header">
+    <span>Score</span>
+    <span>Audit</span>
+    <span>Detail</span>
+    <span class="text-end">Est. savings</span>
   </div>
   {% for opp in property.lighthouse_details.opportunities %}
-  <div class="row bg-light py-2 mb-2 rounded rounded-sm align-items-center">
-    <div class="col-2 col-md-1">
-      <span class="badge bg-{{ opp.score|lh_score_class }}">{{ opp.score|floatformat:"2" }}</span>
-    </div>
-    <div class="col-6 col-md-7">{{ opp.title }}</div>
-    <div class="col-4 col-md-2 text-truncate small text-muted" {% if opp.display_value %}data-bs-toggle="tooltip" data-bs-title="{{ opp.display_value }}"{% endif %}>
+  <div class="insight-row">
+    <span>
+      <span class="chip {% if opp.score >= 0.9 %}chip-ok{% elif opp.score >= 0.5 %}chip-warn{% else %}chip-down{% endif %}">
+        {{ opp.score|floatformat:"2" }}
+      </span>
+    </span>
+    <span class="insight-col-trunc" title="{{ opp.title }}">{{ opp.title }}</span>
+    <span class="insight-col-trunc text-muted small" {% if opp.display_value %}data-bs-toggle="tooltip" data-bs-title="{{ opp.display_value }}"{% endif %}>
       {{ opp.display_value|default:"—" }}
-    </div>
-    <div class="col-12 col-md-2 text-md-end small">
+    </span>
+    <span class="text-end small">
       {% with saved=opp.savings_ms|format_ms_savings %}
-        {% if saved %}<strong>{{ saved }}</strong>{% else %}<span class="text-muted">—</span>{% endif %}
+        {% if saved %}<strong class="text-amber">{{ saved }}</strong>{% else %}<span class="text-muted">—</span>{% endif %}
       {% endwith %}
-    </div>
+    </span>
   </div>
   {% endfor %}
   {% else %}
-  <p class="text-success small">No actionable opportunities — everything passing at this URL.</p>
+  <div class="alert alert-info py-2 small">No actionable opportunities — everything passing at this URL.</div>
   {% endif %}
 </div>
 {% endif %}
 
 {% if property.crawler_insights %}
-<div class="container mt-4">
+<div class="container my-4">
   {% regroup property.crawler_insights|dictsort:"type" by type as insight_type_groups %}
   {% for group in insight_type_groups %}
-  <h3 class="mt-4 text-capitalize">{{ group.grouper }} <small class="text-muted">({{ group.list|length }})</small></h3>
-  <div class="row bg-dark text-white py-2 mb-2 rounded rounded-sm fw-bolder">
-    <div class="col-2">Severity</div>
-    <div class="col-3">URL</div>
-    <div class="col-4">Issue</div>
-    <div class="col-3">Item</div>
+  <div class="section-label mb-2">{{ group.grouper }} · <span class="text-muted">{{ group.list|length }}</span></div>
+  <div class="insight-header">
+    <span>Severity</span>
+    <span>URL</span>
+    <span>Issue</span>
+    <span>Item</span>
   </div>
   {% for insight in group.list|dictsort:"severity" %}
-  <div class="row bg-light py-2 mb-2 rounded rounded-sm">
-    <div class="col-md-2 d-flex align-items-center">
-      <span class="badge {% if insight.severity == 'error' %}bg-danger{% elif insight.severity == 'warning' %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}">
+  <div class="insight-row">
+    <span>
+      <span class="chip {% if insight.severity == 'error' %}chip-down{% elif insight.severity == 'warning' %}chip-warn{% else %}chip-info{% endif %}">
         {{ insight.severity|upper }}
       </span>
-    </div>
-    <div class="col-md-3 text-truncate">
-      <a href="{{ insight.url }}" target="_blank">
-        {{ insight.url|url_path }}
-      </a>
-    </div>
-    <div class="col-md-4 text-truncate" {% if insight.issue %}data-bs-toggle="tooltip" data-bs-title="{{ insight.issue }}"{% endif %}>
+    </span>
+    <span class="insight-col-trunc">
+      <a href="{{ insight.url }}" target="_blank" class="text-muted">{{ insight.url|url_path }}</a>
+    </span>
+    <span class="insight-col-trunc" {% if insight.issue %}data-bs-toggle="tooltip" data-bs-title="{{ insight.issue }}"{% endif %}>
       {{ insight.issue }}
-    </div>
-    <div class="col-md-3 text-truncate" {% if insight.item %}data-bs-toggle="tooltip" data-bs-title="{{ insight.item }}"{% endif %}>
+    </span>
+    <span class="insight-col-trunc text-muted small" {% if insight.item %}data-bs-toggle="tooltip" data-bs-title="{{ insight.item }}"{% endif %}>
       {{ insight.item }}
-    </div>
+    </span>
   </div>
   {% endfor %}
   {% endfor %}

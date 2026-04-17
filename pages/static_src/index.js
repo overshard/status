@@ -1,3 +1,1 @@
-import "./styles/pages.css";
-
-import "./images/home-hero.webp";
+import "./styles/pages.scss";

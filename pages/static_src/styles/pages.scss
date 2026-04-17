@@ -1,0 +1,154 @@
+@use "../../../status/static_src/styles/variables" as *;
+
+// ── Home hero ──
+
+.hero {
+  position: relative;
+  background: #090806;
+  border-bottom: 1px solid rgba(107, 158, 120, 0.08);
+  padding: 4rem 0 4rem;
+
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-family: $font-family-monospace;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(201, 168, 76, 0.85);
+    background: rgba(201, 168, 76, 0.06);
+    border: 1px solid $amber-border;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+
+    .eyebrow-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: $green;
+    }
+  }
+
+  .hero-title {
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 700;
+    line-height: 1.1;
+    color: $white;
+    letter-spacing: -0.01em;
+    margin-top: 1.5rem;
+
+    .accent { color: $green-bright; }
+  }
+
+  .hero-sub {
+    color: #a09890;
+    font-size: 1rem;
+    line-height: 1.7;
+    margin-top: 1.25rem;
+    max-width: 620px;
+  }
+
+  .hero-ctas {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 1.75rem;
+
+    .btn {
+      font-size: 0.82rem;
+      letter-spacing: 0.04em;
+      padding: 0.6rem 1.1rem;
+    }
+  }
+}
+
+// ── Feature tiles ──
+
+.feature {
+  background: #13120e;
+  border: 1px solid rgba(107, 158, 120, 0.08);
+  border-radius: $border-radius;
+  padding: 1.5rem;
+  height: 100%;
+  transition: border-color 250ms ease;
+
+  &:hover { border-color: rgba(107, 158, 120, 0.22); }
+
+  .feature-label {
+    font-family: $font-family-monospace;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(201, 168, 76, 0.75);
+  }
+
+  .feature-title {
+    color: $white;
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+  }
+
+  .feature-desc {
+    color: #a09890;
+    font-size: 0.88rem;
+    line-height: 1.65;
+    margin-top: 0.6rem;
+    margin-bottom: 0;
+  }
+}
+
+// ── Stat strip ──
+
+.stat-strip {
+  background: #0e0d0a;
+  border-top: 1px solid rgba(107, 158, 120, 0.06);
+  border-bottom: 1px solid rgba(107, 158, 120, 0.06);
+  padding: 1.5rem 0;
+
+  .stat { text-align: center; padding: 0 1rem; }
+
+  .stat-label {
+    font-family: $font-family-monospace;
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #665f56;
+  }
+
+  .stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: $green-bright;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+    margin-top: 0.2rem;
+  }
+}
+
+// ── Changelog ──
+
+.changelog-entry {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 1.5rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(107, 158, 120, 0.06);
+
+  @media (max-width: 575px) {
+    grid-template-columns: 1fr;
+    gap: 0.4rem;
+  }
+
+  .changelog-date {
+    font-family: $font-family-monospace;
+    font-size: 0.78rem;
+    color: rgba(201, 168, 76, 0.75);
+    letter-spacing: 0.04em;
+  }
+
+  ul { margin: 0; padding-left: 1.1rem; color: $gray-200; font-size: 0.9rem; }
+  li { margin-bottom: 0.3rem; }
+}

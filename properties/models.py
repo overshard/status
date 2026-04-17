@@ -450,6 +450,24 @@ class Property(CrawlerMixin, AlertsMixin, SecurityMixin, models.Model):
             scores = [score for score in self.lighthouse_scores.values()]
             return round(sum(scores) / len(scores))
 
+    def recent_tick_stream(self, limit=30):
+        """Most-recent-first list of 'up' / 'down' strings for the uptime strip."""
+        codes = list(
+            self.statuses.order_by("-created_at").values_list("status_code", flat=True)[:limit]
+        )
+        return ["up" if c == 200 else "down" for c in reversed(codes)]
+
+    @cached_property
+    def recent_uptime_pct(self):
+        """Uptime percentage over the most recent 100 checks, rounded to one decimal."""
+        codes = list(
+            self.statuses.order_by("-created_at").values_list("status_code", flat=True)[:100]
+        )
+        if not codes:
+            return None
+        up = sum(1 for c in codes if c == 200)
+        return round((up / len(codes)) * 100, 1)
+
 
 class Check(models.Model):
     property = models.ForeignKey(

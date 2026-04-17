@@ -23,6 +23,7 @@ const fixDatamapsStrictMode = {
 
 export default defineConfig({
   plugins: [fixDatamapsStrictMode],
+  base: "/static/",
   build: {
     outDir: resolve(__dirname, "status/static"),
     emptyOutDir: true,
