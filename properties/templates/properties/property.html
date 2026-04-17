@@ -83,7 +83,7 @@
 </div>
 
 <div class="container-fluid">
-  <div class="row {% if not property.lighthouse_scores %}mb-4{% endif %}">
+  <div class="row mb-4">
     <div class="col-6 col-md-3 d-flex align-items-center text-white {% if property.current_status == 200 %}bg-success{% else %}bg-danger{% endif %}">
       <div class="card-body text-center py-2">
         <div class="card-title h4">{% if property.current_status == 200 %}Ok{% else %}Failed{% endif %}</div>
@@ -110,75 +110,6 @@
     </div>
   </div>
 </div>
-
-{% if property.lighthouse_scores %}
-<div class="container-fluid">
-  <div class="row mb-4">
-    {% for category, score in property.lighthouse_scores.items %}
-    <div class="col-6 col-md-3 d-flex align-items-center text-white {% if score >= 80 %}bg-success{% else %}bg-warning{% endif %}">
-      <div class="card-body text-center py-2">
-        <div class="card-title h4">{{ score }}%</div>
-        <div class="card-text text-truncate small">{{ category }}</div>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
-</div>
-{% endif %}
-
-{% if property.lighthouse_details %}
-<div class="container mt-4">
-  <h3 class="mt-4">Performance breakdown</h3>
-  <p class="text-muted small mb-3">
-    Lighthouse combines these weighted metrics to produce the Performance score. The opportunities below are the biggest wins — savings are estimated against the audited URL only.
-  </p>
-
-  {% if property.lighthouse_details.metrics %}
-  <div class="row mb-4">
-    {% for metric in property.lighthouse_details.metrics %}
-    <div class="col-6 col-md d-flex">
-      <div class="card w-100 mb-2">
-        <div class="card-body text-center py-2 border-top border-4 border-{{ metric.score|lh_score_class }}">
-          <div class="card-title h5 mb-0">{{ metric.display_value|default:"—" }}</div>
-          <div class="card-text text-truncate small" title="{{ metric.title }}">
-            {{ metric.acronym }} <span class="text-muted">· {{ metric.weight }}%</span>
-          </div>
-        </div>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
-  {% endif %}
-
-  {% if property.lighthouse_details.opportunities %}
-  <h4 class="mt-4">Top opportunities</h4>
-  <div class="row bg-dark text-white py-2 mb-2 rounded rounded-sm fw-bolder">
-    <div class="col-2 col-md-1">Score</div>
-    <div class="col-6 col-md-7">Audit</div>
-    <div class="col-4 col-md-2">Detail</div>
-    <div class="col-12 col-md-2 text-md-end">Est. savings</div>
-  </div>
-  {% for opp in property.lighthouse_details.opportunities %}
-  <div class="row bg-light py-2 mb-2 rounded rounded-sm align-items-center">
-    <div class="col-2 col-md-1">
-      <span class="badge bg-{{ opp.score|lh_score_class }}">{{ opp.score|floatformat:"2" }}</span>
-    </div>
-    <div class="col-6 col-md-7">{{ opp.title }}</div>
-    <div class="col-4 col-md-2 text-truncate small text-muted" {% if opp.display_value %}data-bs-toggle="tooltip" data-bs-title="{{ opp.display_value }}"{% endif %}>
-      {{ opp.display_value|default:"—" }}
-    </div>
-    <div class="col-12 col-md-2 text-md-end small">
-      {% with saved=opp.savings_ms|format_ms_savings %}
-        {% if saved %}<strong>{{ saved }}</strong>{% else %}<span class="text-muted">—</span>{% endif %}
-      {% endwith %}
-    </div>
-  </div>
-  {% endfor %}
-  {% else %}
-  <p class="text-success small">No actionable opportunities — everything passing at this URL.</p>
-  {% endif %}
-</div>
-{% endif %}
 
 {% if user.is_authenticated %}
 <form style="display:none">{% csrf_token %}</form>
@@ -327,6 +258,75 @@
     </div>
   </div>
 </div>
+
+{% if property.lighthouse_scores %}
+<div class="container-fluid">
+  <div class="row mb-4">
+    {% for category, score in property.lighthouse_scores.items %}
+    <div class="col-6 col-md-3 d-flex align-items-center text-white {% if score >= 80 %}bg-success{% else %}bg-warning{% endif %}">
+      <div class="card-body text-center py-2">
+        <div class="card-title h4">{{ score }}%</div>
+        <div class="card-text text-truncate small">{{ category }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% if property.lighthouse_details %}
+<div class="container mt-4">
+  <h3 class="mt-4">Performance breakdown</h3>
+  <p class="text-muted small mb-3">
+    Lighthouse combines these weighted metrics to produce the Performance score. The opportunities below are the biggest wins — savings are estimated against the audited URL only.
+  </p>
+
+  {% if property.lighthouse_details.metrics %}
+  <div class="row mb-4">
+    {% for metric in property.lighthouse_details.metrics %}
+    <div class="col-6 col-md d-flex">
+      <div class="card w-100 mb-2">
+        <div class="card-body text-center py-2 border-top border-4 border-{{ metric.score|lh_score_class }}">
+          <div class="card-title h5 mb-0">{{ metric.display_value|default:"—" }}</div>
+          <div class="card-text text-truncate small" title="{{ metric.title }}">
+            {{ metric.acronym }} <span class="text-muted">· {{ metric.weight }}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if property.lighthouse_details.opportunities %}
+  <h4 class="mt-4">Top opportunities</h4>
+  <div class="row bg-dark text-white py-2 mb-2 rounded rounded-sm fw-bolder">
+    <div class="col-2 col-md-1">Score</div>
+    <div class="col-6 col-md-7">Audit</div>
+    <div class="col-4 col-md-2">Detail</div>
+    <div class="col-12 col-md-2 text-md-end">Est. savings</div>
+  </div>
+  {% for opp in property.lighthouse_details.opportunities %}
+  <div class="row bg-light py-2 mb-2 rounded rounded-sm align-items-center">
+    <div class="col-2 col-md-1">
+      <span class="badge bg-{{ opp.score|lh_score_class }}">{{ opp.score|floatformat:"2" }}</span>
+    </div>
+    <div class="col-6 col-md-7">{{ opp.title }}</div>
+    <div class="col-4 col-md-2 text-truncate small text-muted" {% if opp.display_value %}data-bs-toggle="tooltip" data-bs-title="{{ opp.display_value }}"{% endif %}>
+      {{ opp.display_value|default:"—" }}
+    </div>
+    <div class="col-12 col-md-2 text-md-end small">
+      {% with saved=opp.savings_ms|format_ms_savings %}
+        {% if saved %}<strong>{{ saved }}</strong>{% else %}<span class="text-muted">—</span>{% endif %}
+      {% endwith %}
+    </div>
+  </div>
+  {% endfor %}
+  {% else %}
+  <p class="text-success small">No actionable opportunities — everything passing at this URL.</p>
+  {% endif %}
+</div>
+{% endif %}
 
 {% if property.crawler_insights %}
 <div class="container mt-4">
