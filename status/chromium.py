@@ -10,12 +10,13 @@ import uuid
 from django.core.files.storage import default_storage
 
 
-# Get chromium path, it's sometimes chromium and sometimes chromium-browser
+# Chromium/Chrome binary discovery — distro names vary (Alpine: chromium,
+# Debian/Ubuntu: chromium-browser, the webdev container ships google-chrome).
 chromium = None
-if shutil.which("chromium"):
-    chromium = "chromium"
-elif shutil.which("chromium-browser"):
-    chromium = "chromium-browser"
+for binary in ("chromium", "chromium-browser", "google-chrome"):
+    if shutil.which(binary):
+        chromium = binary
+        break
 
 
 base_command = [
@@ -30,7 +31,7 @@ base_command = [
     "--disable-extensions",
     "--disable-in-process-stack-traces",
     "--disable-logging",
-    "--window-size=1280x720",
+    "--window-size=1280,720",
     "--hide-scrollbars",
 ] if chromium else []
 

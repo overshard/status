@@ -8,7 +8,7 @@
 
 
 {% block breadcrumbs %}
-<nav style="--bs-breadcrumb-divider: url(&#34;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='%236c757d'/%3E%3C/svg%3E&#34;);" aria-label="breadcrumb">
+<nav aria-label="breadcrumb">
   <ol class="breadcrumb mb-0">
     <li class="breadcrumb-item"><a href="/">Home</a></li>
     <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
@@ -18,177 +18,196 @@
 
 
 {% block main %}
-<div class="container">
-  <div class="row my-3 d-flex align-items-center">
-    <div class="col-sm-6">
-      <h1>{{ title }}</h1>
-      <p>All properties you've created with their current active status and issues.</p>
+<div class="container my-4">
+  <div class="row align-items-center g-3 mb-4">
+    <div class="col-md-5">
+      <div class="section-label mb-1">operator · {{ request.user.username }}</div>
+      <h1 class="fw-bolder text-white mb-0" style="letter-spacing: -0.01em;">{{ title }}</h1>
+      <p class="text-muted mb-0 small mt-1">Every URL you've registered, current probe state, and audit signals.</p>
     </div>
-    <div class="col-sm-6">
-      <form method="get" class="d-flex">
-        <div class="form-floating flex-grow-1 rounded-0 rounded-start">
-          <input type="text" class="form-control" name="q" id="id_search" placeholder="Search" {% if q %}value="{{ q }}"{% endif %} />
-          <label for="id_search" class="form-label">Search</label>
-        </div>
-        <button type="submit" class="btn btn-secondary px-3 rounded-0 rounded-end">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
-            <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
-          </svg>
+    <div class="col-md-7">
+      <div class="dashboard-toolbar">
+        <form method="get" class="search-form flex-grow-1">
+          <span class="search-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+            </svg>
+          </span>
+          <input type="text" class="form-control search-input" name="q" id="id_search" placeholder="grep properties..." {% if q %}value="{{ q }}"{% endif %} />
+        </form>
+        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePropertyAdd" aria-expanded="false" aria-controls="collapsePropertyAdd">
+          + new
         </button>
-        <button class="btn btn-primary px-3 ms-4" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePropertyAdd" aria-expanded="false" aria-controls="collapsePropertyAdd">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-node-plus" viewBox="0 0 16 16">
-            <path fill-rule="evenodd" d="M11 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM6.025 7.5a5 5 0 1 1 0 1H4A1.5 1.5 0 0 1 2.5 10h-1A1.5 1.5 0 0 1 0 8.5v-1A1.5 1.5 0 0 1 1.5 6h1A1.5 1.5 0 0 1 4 7.5h2.025zM11 5a.5.5 0 0 1 .5.5v2h2a.5.5 0 0 1 0 1h-2v2a.5.5 0 0 1-1 0v-2h-2a.5.5 0 0 1 0-1h2v-2A.5.5 0 0 1 11 5zM1.5 7a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1z"/>
-          </svg>
-        </button>
-      </form>
+      </div>
     </div>
   </div>
-  <div class="row mx-0 mb-3 bg-dark py-3 rounded border border-warning collapse" id="collapsePropertyAdd">
-    <div class="col-sm-6">
-      <h2 class="text-white">Add a new property</h2>
-      <p class="text-white">All public URLs are supported.</p>
-      {{ form.errors }}
-      <form method="POST" class="d-flex">
+
+  <div class="collapse mb-4" id="collapsePropertyAdd">
+    <div class="bg-surface border-subtle rounded border p-3">
+      <div class="section-label mb-2">register property</div>
+      <p class="text-muted small mb-3">Any public URL. Probe begins within 3 minutes.</p>
+      <form method="POST" class="dashboard-toolbar">
         {% csrf_token %}
-        <div class="flex-grow-1">
-          <div class="form-floating">
-            <input type="text" name="url" id="id_url" class="form-control {% if form.url.errors %}is-invalid{% endif %} rounded-0 rounded-start" placeholder="URL" required>
-            <label for="id_url">URL</label>
-          </div>
-        </div>
-        <button type="submit" class="btn btn-primary px-3 rounded-0 rounded-end">
-          <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
-            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
-          </svg>
-        </button>
+        <input type="url" name="url" id="id_url" class="form-control flex-grow-1 {% if form.url.errors %}is-invalid{% endif %}" placeholder="https://example.com" required>
+        <button type="submit" class="btn btn-primary">Add →</button>
       </form>
-    </div>
-    <div class="col-sm-6">
-      <h2 class="text-white">Bulk import properties</h2>
-      <p class="text-white">Add a CSV file with the first column being the URL.</p>
-      <form method="POST" class="d-flex" enctype="multipart/form-data" action="{% url 'import_properties' %}">
-        {% csrf_token %}
-        <input type="file" name="csv_file" id="id_csv_file" class="form-control py-3 px-4 {% if form.file.errors %}is-invalid{% endif %} rounded-0 rounded-start" required>
-        <button type="submit" class="btn btn-primary px-4 rounded-0 rounded-end">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
-            <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
-            <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
-          </svg>
-        </button>
-      </form>
+      {% if form.errors %}<div class="text-danger small mt-2">{{ form.errors }}</div>{% endif %}
     </div>
   </div>
-  <div class="row">
-    <div class="col" id="properties">
-      <div class="card rounded-0 border-0 rounded-top py-1 bg-secondary text-white">
-        <div class="row g-0">
-          <div class="col-6 col-md-2 d-flex align-items-center">
-            <div class="card-body py-1">
-              <div class="card-title h3 mb-0">{{ user.total_properties }}</div>
-              <p class="card-text">Properties</p>
-            </div>
-          </div>
-          <div class="col-6 offset-md-2 col-md-2 d-flex align-items-center">
-            <div class="card-body py-1">
-              <div class="card-title h3 mb-0">{{ user.total_properties_down }}</div>
-              <p class="card-text">Properties down</p>
-            </div>
-          </div>
-          <div class="col-6 col-md-2 d-flex align-items-center">
-            <div class="card-body py-1">
-              <div class="card-title h3 mb-0">{{ user.total_checks }}</div>
-              <p class="card-text">Total checks</p>
-            </div>
-          </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="metric-tile metric-accent-green">
+        <div class="metric-label">total properties</div>
+        <div class="metric-value">{{ user.total_properties }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="metric-tile {% if user.total_properties_down %}metric-accent-danger{% else %}metric-accent-green{% endif %}">
+        <div class="metric-label">currently down</div>
+        <div class="metric-value">{{ user.total_properties_down }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="metric-tile metric-accent-green">
+        <div class="metric-label">checks logged</div>
+        <div class="metric-value">{{ user.total_checks }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="metric-tile metric-accent-amber">
+        <div class="metric-label">probe cycle</div>
+        <div class="metric-value" style="font-size: 1.2rem;">3m · <span class="text-muted">live</span></div>
+        <div class="metric-sub">last sync: <span class="text-green">online</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label mb-2">registered properties</div>
+  {% for property in properties.object_list %}
+    <div class="property-row {% if property.current_status != 200 %}is-down{% endif %}">
+      <div class="pr-main">
+        <div class="pr-title">
+          <span class="status-dot {% if property.current_status == 200 %}is-up{% else %}is-down{% endif %}" aria-hidden="true"></span>
+          <a href="{% url 'property' property.id %}" class="text-truncate">{{ property.name }}</a>
+        </div>
+        <div class="pr-url">{{ property.url }}</div>
+        <div class="uptime-strip" aria-label="Recent checks">
+          {% for tick in property.recent_tick_stream %}
+            <span class="uptime-tick is-{{ tick }}"></span>
+          {% empty %}
+            {% for _ in "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" %}<span class="uptime-tick is-none"></span>{% endfor %}
+          {% endfor %}
         </div>
       </div>
-      {% for property in properties.object_list %}
-        <div class="card rounded-0 border-0">
-          <div class="row g-0">
-            <div class="col-12 col-md-4 bg-dark text-white">
-              <div class="card-body">
-                <h2 class="card-title h4 text-truncate">{{ property.name }}</h2>
-                <div class="d-flex">
-                  <a href="{% url 'property' property.id %}" class="btn btn-sm btn-success me-2 w-25">View</a>
-                  {% if not property.is_protected %}
-                  <button type="button" class="btn btn-sm btn-outline-danger w-25" data-bs-toggle="modal" data-bs-target="#delete-modal-{{ property.id }}">
-                    Delete
-                  </button>
+      <div class="pr-side">
+        <div class="pr-meta">
+          <div class="pr-meta-cell">
+            <span class="pr-meta-k">status</span>
+            {% if property.current_status == 200 %}
+              <span class="chip chip-ok">ok · 200</span>
+            {% else %}
+              <span class="chip chip-down">down · {{ property.current_status }}</span>
+            {% endif %}
+          </div>
+          <div class="pr-meta-cell">
+            <span class="pr-meta-k">uptime</span>
+            {% if property.recent_uptime_pct is not None %}
+              {% if property.recent_uptime_pct >= 99 %}
+                <span class="chip chip-ok">{{ property.recent_uptime_pct }}%</span>
+              {% elif property.recent_uptime_pct < 95 %}
+                <span class="chip chip-down">{{ property.recent_uptime_pct }}%</span>
+              {% else %}
+                <span class="chip chip-warn">{{ property.recent_uptime_pct }}%</span>
+              {% endif %}
+            {% else %}
+              <span class="chip chip-muted">—</span>
+            {% endif %}
+          </div>
+          <div class="pr-meta-cell">
+            <span class="pr-meta-k">sec</span>
+            {% if property.has_security_issue %}
+              <span class="chip chip-warn">issues</span>
+            {% else %}
+              <span class="chip chip-ok">ok</span>
+            {% endif %}
+          </div>
+          {% with insights=property.crawler_insights|length %}
+          <div class="pr-meta-cell">
+            <span class="pr-meta-k">seo</span>
+            {% if insights > 100 %}
+              <span class="chip chip-down">{{ insights }}</span>
+            {% elif insights > 25 %}
+              <span class="chip chip-warn">{{ insights }}</span>
+            {% else %}
+              <span class="chip chip-ok">{{ insights }}</span>
+            {% endif %}
+          </div>
+          {% endwith %}
+          <div class="pr-meta-cell">
+            <span class="pr-meta-k">lh</span>
+            {% if property.avg_lighthouse_score %}
+              {% if property.avg_lighthouse_score >= 90 %}
+                <span class="chip chip-ok">{{ property.avg_lighthouse_score }}%</span>
+              {% elif property.avg_lighthouse_score >= 80 %}
+                <span class="chip chip-warn">{{ property.avg_lighthouse_score }}%</span>
+              {% else %}
+                <span class="chip chip-down">{{ property.avg_lighthouse_score }}%</span>
+              {% endif %}
+            {% else %}
+              <span class="chip chip-muted">—</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="pr-actions">
+          {% if not property.is_protected %}
+          <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#delete-modal-{{ property.id }}">
+            Delete
+          </button>
+          <div class="modal fade" id="delete-modal-{{ property.id }}" tabindex="-1" aria-labelledby="delete-modal-{{ property.id }}-label" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title text-white" id="delete-modal-{{ property.id }}-label">Confirm delete</h5>
+                  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal fade text-dark" id="delete-modal-{{ property.id }}" tabindex="-1" aria-labelledby="delete-modal-{{ property.id }}-label" aria-hidden="true">
-                  <div class="modal-dialog">
-                    <div class="modal-content">
-                      <div class="modal-header">
-                        <h5 class="modal-title" id="delete-modal-{{ property.id }}-label">Confirm property delete</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                      </div>
-                      <div class="modal-body">
-                        Are you sure you want to delete <strong>{{ property.url }}</strong>?
-                      </div>
-                      <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">I've changed my mind</button>
-                        <a href="{% url 'property_delete' property.id %}" class="btn btn-danger">Confirm</a>
-                      </div>
-                    </div>
-                  </div>
+                <div class="modal-body">
+                  Are you sure you want to delete <strong class="text-white">{{ property.url }}</strong>? All checks and audit data will be removed.
                 </div>
-                {% endif %}
-              </div>
-            </div>
-            <div class="col-6 col-md-2 d-flex align-items-center text-white {% if property.current_status == 200 %}bg-success{% else %}bg-danger{% endif %}">
-              <div class="card-body">
-                <div class="card-title h4">{% if property.current_status == 200 %}Ok{% else %}Failed{% endif %}</div>
-                <div class="card-text text-truncate small">Current status</div>
-              </div>
-            </div>
-            <div class="col-6 col-md-2 d-none d-md-flex d-flex align-items-center text-white {% if not property.has_security_issue %}bg-success{% else %}bg-danger{% endif %}">
-              <div class="card-body">
-                <div class="card-title h4">{% if not property.has_security_issue %}Ok{% else %}Failed{% endif %}</div>
-                <div class="card-text text-truncate small">Security</div>
-              </div>
-            </div>
-            {% with property.crawler_insights|length as insights %}
-            <div class="col-6 col-md-2 d-flex align-items-center text-white {% if insights > 100 %}bg-danger{% elif insights > 25 %}bg-warning{% else %}bg-success{% endif %}">
-              <div class="card-body">
-                <div class="card-title h4">{{ insights }}</div>
-                <div class="card-text text-truncate small">Crawler issues</div>
-              </div>
-            </div>
-            {% endwith %}
-            <div class="col-6 col-md-2 d-none d-md-flex d-flex align-items-center text-white {% if property.avg_lighthouse_score < 80 %}bg-warning{% else %}bg-success{% endif %}">
-              <div class="card-body">
-                <div class="card-title h4">
-                  {% if property.avg_lighthouse_score %}
-                    {{ property.avg_lighthouse_score }}%
-                  {% else %}
-                    Checking...
-                  {% endif %}
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
+                  <a href="{% url 'property_delete' property.id %}" class="btn btn-outline-danger">Delete</a>
                 </div>
-                <div class="card-text text-truncate small">Avg. LH score</div>
               </div>
             </div>
           </div>
+          {% endif %}
+          <a href="{% url 'property' property.id %}" class="btn btn-sm btn-outline-light">View →</a>
         </div>
-      {% endfor %}
+      </div>
     </div>
-  </div>
+  {% empty %}
+    <div class="text-center py-5 text-muted">
+      <div class="section-label mb-3" style="justify-content:center;">no properties yet</div>
+      <p class="mb-0 small">Click <strong>+ new</strong> above to register your first URL.</p>
+    </div>
+  {% endfor %}
+
   {% if properties.paginator.num_pages > 1 %}
-  <div class="row mt-5">
+  <div class="row mt-4">
     <div class="col d-flex justify-content-center">
       <nav aria-label="Pagination">
         <ul class="pagination">
           <li class="page-item {% if not properties.has_previous %}disabled{% endif %}">
-            <a class="page-link" {% if properties.has_previous %}href="?page={{ properties.previous_page_number }}"{% endif %}>Previous</a>
+            <a class="page-link" {% if properties.has_previous %}href="?page={{ properties.previous_page_number }}"{% endif %}>← Prev</a>
           </li>
-
           {% for page_num in properties.paginator.page_range %}
             <li class="page-item {% if properties.number == page_num %}active{% endif %}">
               <a class="page-link" href="/properties/?page={{ page_num }}">{{ page_num }}</a>
             </li>
           {% endfor %}
-
           <li class="page-item {% if not properties.has_next %}disabled{% endif %}">
-            <a class="page-link" {% if properties.has_next %}href="?page={{ properties.next_page_number }}"{% endif %}>Next</a>
+            <a class="page-link" {% if properties.has_next %}href="?page={{ properties.next_page_number }}"{% endif %}>Next →</a>
           </li>
         </ul>
       </nav>

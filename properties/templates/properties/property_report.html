@@ -1,0 +1,341 @@
+{% load static properties_tags %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ property.name }} · Status Report</title>
+  <style>
+    @page { size: letter; margin: 0.6in; }
+
+    :root {
+      --ink: #1a1d1b;
+      --ink-soft: #4a4a44;
+      --ink-muted: #7a7a74;
+      --paper: #ffffff;
+      --paper-2: #f6f4ef;
+      --rule: #d8d4c8;
+      --accent: #4e7a5a;         /* deeper moss on white */
+      --accent-soft: #e8f0ea;
+      --amber: #9a7f2e;
+      --amber-soft: #f6efd7;
+      --danger: #9f3f2b;
+      --danger-soft: #f5e3dd;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 10pt;
+      line-height: 1.5;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1, h2, h3, h4 {
+      margin: 0 0 0.4em 0;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -0.01em;
+    }
+    h1 { font-size: 22pt; line-height: 1.15; }
+    h2 { font-size: 12pt; margin-top: 1.4em; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); border-bottom: 1px solid var(--rule); padding-bottom: 0.25em; }
+    h3 { font-size: 10.5pt; margin-top: 1em; }
+
+    p { margin: 0 0 0.6em 0; }
+    a { color: var(--accent); text-decoration: none; }
+    code, .mono {
+      font-family: ui-monospace, Menlo, Consolas, 'Courier New', monospace;
+      font-size: 9pt;
+    }
+
+    .doc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 1em;
+      padding-bottom: 0.8em;
+      border-bottom: 2px solid var(--ink);
+      margin-bottom: 1em;
+    }
+    .doc-header .brand {
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 9pt;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink-muted);
+    }
+    .doc-header .brand strong { color: var(--ink); letter-spacing: 0.08em; }
+    .meta-url {
+      color: var(--ink-soft);
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 9.5pt;
+    }
+    .meta-line {
+      color: var(--ink-muted);
+      font-size: 9pt;
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+    }
+
+    /* Summary tiles */
+    .tile-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5em;
+      margin: 1em 0;
+    }
+    .tile {
+      border: 1px solid var(--rule);
+      border-left: 3px solid var(--accent);
+      padding: 0.55em 0.7em;
+      background: var(--paper);
+    }
+    .tile.bad { border-left-color: var(--danger); }
+    .tile.warn { border-left-color: var(--amber); }
+    .tile-label {
+      font-size: 7.5pt;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-muted);
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+    }
+    .tile-value {
+      font-size: 16pt;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.1;
+      margin-top: 0.15em;
+    }
+    .tile-sub { font-size: 8pt; color: var(--ink-muted); margin-top: 0.1em; }
+
+    /* Key/value block */
+    table.kv {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.5em 0;
+    }
+    table.kv td {
+      padding: 0.3em 0.5em;
+      border-bottom: 1px solid var(--rule);
+      vertical-align: top;
+    }
+    table.kv td.k {
+      width: 35%;
+      color: var(--ink-muted);
+      font-size: 9pt;
+      letter-spacing: 0.04em;
+    }
+
+    /* Data tables */
+    table.data {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.4em 0 1em;
+      font-size: 9pt;
+    }
+    table.data th, table.data td {
+      text-align: left;
+      padding: 0.35em 0.55em;
+      border-bottom: 1px solid var(--rule);
+      vertical-align: top;
+    }
+    table.data th {
+      background: var(--paper-2);
+      font-size: 8pt;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-muted);
+      font-weight: 600;
+      border-bottom: 1.5px solid var(--ink-muted);
+    }
+    table.data tbody tr:nth-child(even) td { background: var(--paper-2); }
+
+    /* Pass/fail marker used in security + checks */
+    .mark {
+      display: inline-block;
+      padding: 0.1em 0.5em;
+      font-size: 8pt;
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border-radius: 2px;
+      border: 1px solid transparent;
+    }
+    .mark.ok { background: var(--accent-soft); color: var(--accent); border-color: #b9d3c2; }
+    .mark.warn { background: var(--amber-soft); color: var(--amber); border-color: #e2d39b; }
+    .mark.fail { background: var(--danger-soft); color: var(--danger); border-color: #dfb2a7; }
+    .mark.muted { background: #f0ede5; color: var(--ink-muted); border-color: var(--rule); }
+
+    /* Security two-column grid */
+    .sec-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 1.2em;
+      margin: 0.3em 0 1em;
+    }
+    .sec-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.3em 0;
+      border-bottom: 1px solid var(--rule);
+      font-size: 9pt;
+    }
+
+    .footer-note {
+      margin-top: 1.5em;
+      padding-top: 0.6em;
+      border-top: 1px solid var(--rule);
+      font-size: 8.5pt;
+      color: var(--ink-muted);
+    }
+
+    .insight-severity {
+      text-transform: uppercase;
+      font-size: 7.5pt;
+      letter-spacing: 0.08em;
+    }
+
+    .col-narrow { width: 90px; }
+    .col-short { width: 70px; text-align: right; }
+  </style>
+</head>
+<body>
+  <div class="doc-header">
+    <div>
+      <div class="brand"><strong>Status</strong> · property report</div>
+      <h1>{{ property.name }}</h1>
+      <a class="meta-url" href="{{ property.url }}">{{ property.url }}</a>
+    </div>
+    <div class="meta-line" style="text-align: right;">
+      generated · {% now "Y-m-d H:i" %}<br>
+      operator · {{ property.user.username }}
+    </div>
+  </div>
+
+  <h2>Live signals</h2>
+  <div class="tile-grid">
+    <div class="tile {% if property.current_status != 200 %}bad{% endif %}">
+      <div class="tile-label">HTTP Status</div>
+      <div class="tile-value">{{ property.current_status }}</div>
+      <div class="tile-sub">{% if property.current_status == 200 %}OK · all clear{% else %}failing{% endif %}</div>
+    </div>
+    <div class="tile {% if property.invalid_cert %}bad{% endif %}">
+      <div class="tile-label">TLS cert</div>
+      <div class="tile-value">{% if property.invalid_cert %}Invalid{% else %}Valid{% endif %}</div>
+      <div class="tile-sub">chain + trust</div>
+    </div>
+    <div class="tile {% if property.has_security_issue %}warn{% endif %}">
+      <div class="tile-label">Security</div>
+      <div class="tile-value">{% if property.has_security_issue %}Issues{% else %}Pass{% endif %}</div>
+      <div class="tile-sub">header scan</div>
+    </div>
+    <div class="tile {% if property.avg_response_time > 500 %}warn{% endif %}">
+      <div class="tile-label">Response</div>
+      <div class="tile-value">{{ property.avg_response_time }} <span style="font-size: 9pt; color: var(--ink-muted); font-weight: 500;">ms</span></div>
+      <div class="tile-sub">rolling avg · 31 checks</div>
+    </div>
+  </div>
+
+  <table class="kv">
+    <tr><td class="k">Alert state</td><td>{{ property.alert_state|title }}{% if property.last_alert_sent %} <span class="meta-line">· last alert {{ property.last_alert_sent|date:"Y-m-d H:i" }}</span>{% endif %}</td></tr>
+    <tr><td class="k">Visibility</td><td>{% if property.is_public %}Public{% else %}Private{% endif %}</td></tr>
+    <tr><td class="k">Registered</td><td>{{ property.created_at|date:"Y-m-d" }}</td></tr>
+    <tr><td class="k">Total checks</td><td>{{ property.total_checks }}</td></tr>
+    {% if property.recent_uptime_pct is not None %}
+    <tr><td class="k">Uptime (last 100)</td><td>{{ property.recent_uptime_pct }}%</td></tr>
+    {% endif %}
+  </table>
+
+  {% if property.lighthouse_scores %}
+  <h2>Lighthouse</h2>
+  <div class="tile-grid">
+    {% for category, score in property.lighthouse_scores.items %}
+    <div class="tile {% if score < 50 %}bad{% elif score < 90 %}warn{% endif %}">
+      <div class="tile-label">{{ category }}</div>
+      <div class="tile-value">{{ score }}<span style="font-size: 10pt; color: var(--ink-muted);">%</span></div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <h2>Security · header scan</h2>
+  <div class="sec-grid">
+    <div class="sec-item"><span>Use HTTPS</span><span class="mark {% if property.is_https %}ok{% else %}fail{% endif %}">{% if property.is_https %}pass{% else %}fail{% endif %}</span></div>
+    <div class="sec-item"><span>Set MIME types</span><span class="mark {% if property.has_mime_type %}ok{% else %}fail{% endif %}">{% if property.has_mime_type %}pass{% else %}fail{% endif %}</span></div>
+    <div class="sec-item"><span>Content sniff protection</span><span class="mark {% if property.has_content_sniffing_protection %}ok{% else %}fail{% endif %}">{% if property.has_content_sniffing_protection %}pass{% else %}fail{% endif %}</span></div>
+    <div class="sec-item"><span>Clickjack protection</span><span class="mark {% if property.has_clickjack_protection %}ok{% else %}fail{% endif %}">{% if property.has_clickjack_protection %}pass{% else %}fail{% endif %}</span></div>
+    <div class="sec-item"><span>XSS protection</span><span class="mark {% if property.has_xss_protection %}ok{% else %}fail{% endif %}">{% if property.has_xss_protection %}pass{% else %}fail{% endif %}</span></div>
+    <div class="sec-item"><span>Hide server version</span><span class="mark {% if property.hides_server_version %}ok{% else %}fail{% endif %}">{% if property.hides_server_version %}pass{% else %}fail{% endif %}</span></div>
+    <div class="sec-item"><span>HSTS enabled</span><span class="mark {% if property.has_hsts %}ok{% else %}fail{% endif %}">{% if property.has_hsts %}pass{% else %}fail{% endif %}</span></div>
+    <div class="sec-item"><span>HSTS preload</span><span class="mark {% if property.has_hsts_preload %}ok{% else %}fail{% endif %}">{% if property.has_hsts_preload %}pass{% else %}fail{% endif %}</span></div>
+  </div>
+
+  {% if property.lighthouse_details.metrics %}
+  <h2>Performance metrics</h2>
+  <table class="data">
+    <thead>
+      <tr><th>Acronym</th><th>Metric</th><th class="col-narrow">Value</th><th class="col-short">Weight</th><th class="col-short">Score</th></tr>
+    </thead>
+    <tbody>
+      {% for metric in property.lighthouse_details.metrics %}
+      <tr>
+        <td><strong>{{ metric.acronym }}</strong></td>
+        <td>{{ metric.title }}</td>
+        <td class="mono">{{ metric.display_value|default:"—" }}</td>
+        <td class="col-short">{{ metric.weight }}%</td>
+        <td class="col-short"><span class="mark {% if metric.score >= 0.9 %}ok{% elif metric.score >= 0.5 %}warn{% else %}fail{% endif %}">{{ metric.score|floatformat:"2" }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  {% if property.lighthouse_details.opportunities %}
+  <h2>Top opportunities</h2>
+  <table class="data">
+    <thead>
+      <tr><th class="col-short">Score</th><th>Audit</th><th>Detail</th><th class="col-narrow">Est. savings</th></tr>
+    </thead>
+    <tbody>
+      {% for opp in property.lighthouse_details.opportunities %}
+      <tr>
+        <td class="col-short"><span class="mark {% if opp.score >= 0.9 %}ok{% elif opp.score >= 0.5 %}warn{% else %}fail{% endif %}">{{ opp.score|floatformat:"2" }}</span></td>
+        <td>{{ opp.title }}</td>
+        <td class="mono">{{ opp.display_value|default:"—" }}</td>
+        <td class="col-narrow">{% with saved=opp.savings_ms|format_ms_savings %}{% if saved %}<strong>{{ saved }}</strong>{% else %}—{% endif %}{% endwith %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  {% if property.crawler_insights %}
+  <h2>Crawler insights</h2>
+  {% regroup property.crawler_insights|dictsort:"type" by type as insight_type_groups %}
+  {% for group in insight_type_groups %}
+  <h3>{{ group.grouper|capfirst }} <span class="meta-line">({{ group.list|length }})</span></h3>
+  <table class="data">
+    <thead>
+      <tr><th class="col-narrow">Severity</th><th>URL</th><th>Issue</th><th>Item</th></tr>
+    </thead>
+    <tbody>
+      {% for insight in group.list|dictsort:"severity" %}
+      <tr>
+        <td><span class="mark {% if insight.severity == 'error' %}fail{% elif insight.severity == 'warning' %}warn{% else %}muted{% endif %} insight-severity">{{ insight.severity }}</span></td>
+        <td class="mono">{{ insight.url|url_path }}</td>
+        <td>{{ insight.issue }}</td>
+        <td class="mono">{{ insight.item|default:"—" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endfor %}
+  {% endif %}
+
+  <div class="footer-note">
+    Status · self-hosted website monitoring. Report generated from live data at the moment above. Metrics refresh every 3 minutes (HTTP), daily (Lighthouse), weekly (crawler).
+  </div>
+</body>
+</html>

@@ -6,6 +6,7 @@
     "build": "vite build"
   },
   "dependencies": {
+    "@fontsource/monaspace-argon": "^5.2.5",
     "@popperjs/core": "^2.11.5",
     "bootstrap": "^5.1.3",
     "chart.js": "^3.7.1",

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 
 {% block extra_head %}
@@ -6,8 +7,13 @@
 {% endblock %}
 
 
+{% block extra_css %}
+<link href="{% static 'pages.css' %}" rel="stylesheet">
+{% endblock %}
+
+
 {% block breadcrumbs %}
-<nav style="--bs-breadcrumb-divider: url(&#34;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='%236c757d'/%3E%3C/svg%3E&#34;);" aria-label="breadcrumb">
+<nav aria-label="breadcrumb">
   <ol class="breadcrumb mb-0">
     <li class="breadcrumb-item"><a href="/">Home</a></li>
     <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
@@ -19,104 +25,128 @@
 {% block main %}
 <div class="container my-5">
   <div class="row">
-    <div class="col-lg-6 offset-lg-3 col-sm-8 offset-sm-2 col-xs-12 offset-xs-0">
-      <h1>{{ title }}</h1>
-      <p>New features and changes to status, sometimes I'll tease something coming soon.</p>
+    <div class="col-lg-8 offset-lg-2">
+      <div class="section-label mb-2">release log</div>
+      <h1 class="fw-bolder text-white" style="letter-spacing: -0.01em;">{{ title }}</h1>
+      <p class="text-muted">Shipped changes, incidents, and the occasional tease for something coming.</p>
     </div>
   </div>
-  <div class="row">
-    <div class="col-lg-6 offset-lg-3 col-sm-8 offset-sm-2 col-xs-12 offset-xs-0">
-      <div class="row border-bottom py-2">
-        <div class="col-3">
-          <span class="badge bg-success">2025-05-31</span>
-        </div>
-        <div class="col-9">
-          <ul class="mb-0">
-            <li>Improve alert system with state tracking and recovery notifications</li>
-          </ul>
-        </div>
+
+  <div class="row mt-4">
+    <div class="col-lg-8 offset-lg-2">
+
+      <div class="changelog-entry">
+        <div class="changelog-date">2026-04-17</div>
+        <ul>
+          <li>Redesign the whole dashboard with a warm-earth palette — mossy forest green and amber on deep charcoal, Monaspace Argon throughout</li>
+          <li>Rework the property page with live-signals tiles, Lighthouse score cards, styled Chart.js panels, and compact insight tables</li>
+          <li>Add recent-uptime bar strips and rolling uptime percentage to every property row on the dashboard</li>
+          <li>Surface the full Lighthouse performance breakdown — weighted metric tiles and top savings opportunities, ranked by impact</li>
+          <li>Swap the 🚀 favicon for a themed SVG tile matching the in-app logo</li>
+          <li>Update the chromium wrapper to also pick up <code>google-chrome</code> so the webdev container runs locally without extra setup</li>
+          <li>Fix logout 405 by switching to a POST form + CSRF (Django 5 <code>LogoutView</code> is POST-only)</li>
+        </ul>
       </div>
 
-      <div class="row border-bottom py-2">
-        <div class="col-3">
-          <span class="badge bg-success">2022-07-16</span>
-        </div>
-        <div class="col-9">
-          <ul class="mb-0">
-            <li>Add docker init to handle lighthouse chrome zombies</li>
-          </ul>
-        </div>
+      <div class="changelog-entry">
+        <div class="changelog-date">2026-04-16</div>
+        <ul>
+          <li>Add live crawl/lighthouse status panel with real-time recrawl and rerun buttons</li>
+          <li>Rewrite the SEO crawler in-process using <code>requests</code> + <code>BeautifulSoup</code> — no more Scrapy subprocess</li>
+          <li>Harden the scheduler, alert state machine, and crawl pipeline against races and partial failures</li>
+          <li>Harden the Lighthouse runner and surface failure reasons in the UI</li>
+          <li>Migrate the frontend build from Webpack/Yarn to Vite/Bun</li>
+        </ul>
       </div>
 
-      <div class="row border-bottom py-2">
-        <div class="col-3">
-          <span class="badge bg-success">2022-07-15</span>
-        </div>
-        <div class="col-9">
-          <ul class="mb-0">
-            <li>Add check queue to be more resource friendly</li>
-            <li>Add lighthouse scores</li>
-          </ul>
-        </div>
+      <div class="changelog-entry">
+        <div class="changelog-date">2026-04-09</div>
+        <ul>
+          <li>Migrate Python package management from Pipenv/pyenv to <code>uv</code></li>
+        </ul>
       </div>
 
-      <div class="row border-bottom py-2">
-        <div class="col-3">
-          <span class="badge bg-success">2022-07-05</span>
-        </div>
-        <div class="col-9">
-          <ul class="mb-0">
-            <li>Improve property UI</li>
-            <li>Improve properties listing UI</li>
-          </ul>
-        </div>
+      <div class="changelog-entry">
+        <div class="changelog-date">2026-04-03</div>
+        <ul>
+          <li>Bind the Docker port to localhost only — host should proxy in</li>
+        </ul>
       </div>
 
-      <div class="row border-bottom py-2">
-        <div class="col-3">
-          <span class="badge bg-success">2022-07-04</span>
-        </div>
-        <div class="col-9">
-          <ul class="mb-0">
-            <li>Add properties listing pagination</li>
-            <li>Add properties listing search</li>
-            <li>Improve properties listing UI</li>
-          </ul>
-        </div>
+      <div class="changelog-entry">
+        <div class="changelog-date">2025-06-01</div>
+        <ul>
+          <li>Refactor property email templates to share a base</li>
+        </ul>
       </div>
 
-      <div class="row border-bottom py-2">
-        <div class="col-3">
-          <span class="badge bg-success">2022-06-26</span>
-        </div>
-        <div class="col-9">
-          <ul class="mb-0">
-            <li>Add HSTS monitoring</li>
-          </ul>
-        </div>
+      <div class="changelog-entry">
+        <div class="changelog-date">2025-05-31</div>
+        <ul>
+          <li>Improve alert system with state tracking and recovery notifications — no more alert spam on flapping sites</li>
+        </ul>
       </div>
 
-      <div class="row border-bottom py-2">
-        <div class="col-3">
-          <span class="badge bg-success">2022-06-25</span>
-        </div>
-        <div class="col-9">
-          <ul class="mb-0">
-            <li>Add uptime chart</li>
-          </ul>
-        </div>
+      <div class="changelog-entry">
+        <div class="changelog-date">2022-07-25</div>
+        <ul>
+          <li>Add recrawl button</li>
+          <li>Run crawler weekly on a schedule</li>
+        </ul>
       </div>
 
-      <div class="row border-bottom py-2">
-        <div class="col-3">
-          <span class="badge bg-success">2022-06-19</span>
-        </div>
-        <div class="col-9">
-          <ul class="mb-0">
-            <li>Create status project</li>
-          </ul>
-        </div>
+      <div class="changelog-entry">
+        <div class="changelog-date">2022-07-23</div>
+        <ul>
+          <li>Add crawler insights — title, description, canonical, OG tags, H1 extraction per page</li>
+        </ul>
       </div>
+
+      <div class="changelog-entry">
+        <div class="changelog-date">2022-07-16</div>
+        <ul>
+          <li>Add docker init to handle Lighthouse Chrome zombies</li>
+        </ul>
+      </div>
+
+      <div class="changelog-entry">
+        <div class="changelog-date">2022-07-15</div>
+        <ul>
+          <li>Add check queue to be more resource friendly</li>
+          <li>Add Lighthouse scores</li>
+        </ul>
+      </div>
+
+      <div class="changelog-entry">
+        <div class="changelog-date">2022-07-04</div>
+        <ul>
+          <li>Add properties listing pagination</li>
+          <li>Add properties listing search</li>
+          <li>Improve properties listing UI</li>
+        </ul>
+      </div>
+
+      <div class="changelog-entry">
+        <div class="changelog-date">2022-06-26</div>
+        <ul>
+          <li>Add HSTS monitoring</li>
+        </ul>
+      </div>
+
+      <div class="changelog-entry">
+        <div class="changelog-date">2022-06-25</div>
+        <ul>
+          <li>Add uptime chart</li>
+        </ul>
+      </div>
+
+      <div class="changelog-entry">
+        <div class="changelog-date">2022-06-19</div>
+        <ul>
+          <li>Create status project</li>
+        </ul>
+      </div>
+
     </div>
   </div>
 </div>

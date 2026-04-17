@@ -1,44 +1,812 @@
+@use "variables" as *;
+
+// ── CSS variable overrides ──
+// Bootstrap 5.3 writes defaults into `:root,[data-bs-theme=light]`. Use
+// `html:root` so we outrank the default block and enforce the dark palette.
+html:root {
+  --bs-body-bg: #{$body-bg};
+  --bs-body-color: #{$body-color};
+  --bs-body-bg-rgb: 14, 13, 10;
+  --bs-body-color-rgb: 221, 215, 205;
+  --bs-emphasis-color: #{$white};
+  --bs-secondary-bg: #13120e;
+  --bs-tertiary-bg: #18160f;
+  --bs-border-color: rgba(107, 158, 120, 0.12);
+  --bs-link-color-rgb: 125, 184, 140;
+  --bs-link-hover-color-rgb: 149, 204, 162;
+  --bs-heading-color: #{$white};
+}
+
+// ── Global ──
+
 body {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: 0.01em;
+  background-color: $body-bg !important;
+  color: $body-color;
 }
 
-main {
-    flex: 1;
-}
+main { flex: 1; }
 
-.vh-100 {
-    height: 100vh;
-}
+.vh-100 { height: 100vh; }
 
-.login-hero {
-  background: var(--background-image);
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-}
+// ── Logo (uptime-bars mark) ──
+// Rendered as an inline SVG in the template so it scales cleanly. Matches the
+// favicon exactly.
 
 .logo {
-  content: "";
-  display: block;
-  background-image: linear-gradient(to right, rgb(14, 63, 244) 0px, rgb(132, 43, 255) 100%);
-  width: 36px;
-  height: 36px;
-  margin-top: auto;
-  margin-bottom: auto;
-  transition: transform .2s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  text-decoration: none !important;
+  transition: transform 250ms ease;
+
+  svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
 
   &:hover {
-    transform: rotate(15deg) scale(1.1);
+    transform: translateY(-1px);
+  }
+
+  &.logo-sm {
+    width: 18px;
+    height: 18px;
   }
 }
 
+// ── Navbar ──
+
 .navbar {
-  height: 50px;
+  height: 52px;
   padding: 0;
+  background: #090806 !important;
+  border-bottom: 1px solid rgba(107, 158, 120, 0.06);
+
+  .navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: $white;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-size: 0.78rem;
+    text-decoration: none;
+
+    .brand-text { color: $white; }
+    .brand-dot {
+      display: inline-block;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: $green;
+    }
+  }
+
+  .nav-link {
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: lowercase;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    color: rgba(221, 215, 205, 0.6);
+    position: relative;
+    transition: color 200ms ease;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 2px;
+      left: 1rem;
+      right: 1rem;
+      height: 1px;
+      background: $green;
+      transform: scaleX(0);
+      transition: transform 250ms ease;
+    }
+
+    &:hover,
+    &.active { color: $white; }
+
+    &:hover::after,
+    &.active::after { transform: scaleX(1); }
+  }
 }
 
+// ── Breadcrumb bar ──
+
+.breadcrumb-bar {
+  background: rgba(107, 158, 120, 0.02);
+  border-bottom: 1px solid rgba(107, 158, 120, 0.04);
+
+  .breadcrumb { font-family: $font-family-monospace; }
+}
+
+// ── Section labels — amber caps, no prompt glyph ──
+
+.section-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(201, 168, 76, 0.75);
+  font-family: $font-family-monospace;
+}
+
+// ── Cards (base) ──
+
+.card {
+  background: $card-bg;
+  border: 1px solid $card-border-color;
+  transition: border-color 250ms ease;
+
+  &:hover { border-color: rgba(107, 158, 120, 0.2); }
+}
+
+// ── Status dot ──
+
+.status-dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  margin-right: 0.55rem;
+  vertical-align: middle;
+  flex-shrink: 0;
+
+  &.status-dot-lg {
+    width: 14px; height: 14px;
+    margin-right: 0;
+  }
+
+  &.is-up { background: $green; box-shadow: 0 0 0 3px rgba(107, 158, 120, 0.12); }
+  &.is-down { background: $terracotta; box-shadow: 0 0 0 3px rgba(196, 112, 85, 0.12); }
+  &.is-warn { background: $amber; box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.12); }
+  &.is-idle { background: #4a443c; }
+}
+
+// ── Visibility toggle (segmented pill) ──
+// Replaces the Bootstrap form-switch which was near-invisible on the dark
+// theme. Clear two-state UI — active half highlighted, inactive half dim.
+
+.toggle-label {
+  font-family: $font-family-monospace;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #847c72;
+  cursor: help;
+}
+
+.toggle-pill {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid rgba(107, 158, 120, 0.22);
+  border-radius: 999px;
+  overflow: hidden;
+  cursor: pointer;
+  background: #0e0d0a;
+  margin: 0;
+  user-select: none;
+  line-height: 1;
+
+  input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 0; height: 0;
+  }
+
+  .toggle-pill-seg {
+    padding: 0.45rem 0.9rem;
+    font-family: $font-family-monospace;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #665f56;
+    transition: background 180ms ease, color 180ms ease;
+  }
+
+  // Default (unchecked) = Private is active
+  input ~ .toggle-pill-private {
+    background: rgba(201, 168, 76, 0.12);
+    color: #ddc06a;
+  }
+
+  // Checked = Public is active
+  input:checked ~ .toggle-pill-private {
+    background: transparent;
+    color: #665f56;
+  }
+  input:checked ~ .toggle-pill-public {
+    background: $green-dim;
+    color: $green-bright;
+  }
+
+  &:hover {
+    border-color: rgba(107, 158, 120, 0.35);
+  }
+}
+
+// ── Metric tile ──
+// Every tile fills its grid cell so a row of them all share one height, even
+// when content length varies (e.g. one tile has a sub-line, others don't).
+
+.metric-tile {
+  background: $card-bg;
+  border: 1px solid $card-border-color;
+  border-radius: $border-radius;
+  padding: 1rem 1.15rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  .metric-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #847c72;
+  }
+
+  .metric-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: $white;
+    margin-top: 0.35rem;
+    letter-spacing: -0.01em;
+  }
+
+  .metric-sub {
+    font-size: 0.72rem;
+    color: #847c72;
+    margin-top: auto;  // Pins sub to the bottom so all tiles baseline-align
+    padding-top: 0.35rem;
+    letter-spacing: 0.02em;
+  }
+
+  &.metric-accent-green {
+    border-color: $green-border;
+    .metric-value { color: $green-bright; }
+  }
+  &.metric-accent-amber {
+    border-color: $amber-border;
+    .metric-value { color: #ddc06a; }
+  }
+  &.metric-accent-danger {
+    border-color: $terracotta-border;
+    .metric-value { color: #d88870; }
+  }
+}
+
+// ── Chips (inline status/score) ──
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: $font-family-monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.6rem;
+  border-radius: 2px;
+  border: 1px solid transparent;
+  line-height: 1;
+
+  &.chip-ok {
+    background: $green-dim;
+    color: $green-bright;
+    border-color: $green-border;
+  }
+  &.chip-down {
+    background: $terracotta-dim;
+    color: #e38871;
+    border-color: $terracotta-border;
+  }
+  &.chip-warn {
+    background: $amber-dim;
+    color: #ddc06a;
+    border-color: $amber-border;
+  }
+  &.chip-info {
+    background: rgba(126, 170, 184, 0.08);
+    color: #9ec5d2;
+    border-color: rgba(126, 170, 184, 0.22);
+  }
+  &.chip-muted {
+    background: rgba(221, 215, 205, 0.04);
+    color: #847c72;
+    border-color: rgba(221, 215, 205, 0.08);
+  }
+}
+
+// ── Footer ──
+
 footer {
-  padding: 6rem 0;
+  padding-top: 4rem;
+  padding-bottom: 3rem;
+  position: relative;
+  background: #090806;
+  border-top: 1px solid rgba(107, 158, 120, 0.06);
+
+  .h5 {
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(201, 168, 76, 0.55);
+    font-weight: 600;
+  }
+
+  p {
+    color: rgba(221, 215, 205, 0.5);
+    font-size: 0.85rem;
+    line-height: 1.75;
+
+    a {
+      color: rgba(221, 215, 205, 0.75);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+
+      &:hover { color: $white; }
+    }
+  }
+
+  .links {
+    padding-top: 2rem;
+    padding-bottom: 1rem;
+  }
+}
+
+.footer-bar {
+  background: #050403;
+  border-top: 1px solid rgba(107, 158, 120, 0.04);
+  padding: 0.8rem 0;
+  color: rgba(221, 215, 205, 0.3);
+  font-size: 0.78rem;
+
+  small { color: rgba(221, 215, 205, 0.3); }
+
+  &-link {
+    color: rgba(221, 215, 205, 0.3);
+    transition: color 200ms ease;
+
+    &:hover { color: $white; }
+  }
+}
+
+// ── Uptime strip ──
+
+.uptime-strip {
+  display: flex;
+  gap: 2px;
+  align-items: flex-end;
+  height: 20px;
+
+  .uptime-tick {
+    flex: 1 1 auto;
+    min-width: 2px;
+    height: 100%;
+    background: #211e1a;
+    border-radius: 1px;
+
+    &.is-up { background: $green; opacity: 0.7; }
+    &.is-down { background: $terracotta; opacity: 0.85; }
+    &.is-warn { background: $amber; opacity: 0.7; }
+    &.is-none { background: #18160f; }
+  }
+}
+
+// ── Terminal-style block ──
+
+.terminal-block {
+  background: rgba(9, 8, 6, 0.7);
+  border: 1px solid rgba(107, 158, 120, 0.15);
+  border-radius: $border-radius;
+  font-family: $font-family-monospace;
+  font-size: 0.8rem;
+  color: $green-bright;
+  padding: 1rem 1.2rem;
+  line-height: 1.8;
+
+  .t-line { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .t-prompt { color: $amber; margin-right: 0.4rem; }
+  .t-out { color: $gray-200; }
+  .t-comment { color: #665f56; }
+  .t-key { color: $amber; }
+  .t-val { color: $green-bright; }
+  .t-cursor {
+    display: inline-block; width: 7px; height: 0.9em; vertical-align: -2px;
+    background: $green-bright;
+    animation: t-blink 1s steps(1) infinite;
+  }
+}
+
+@keyframes t-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+// ── Property row ──
+
+.property-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem 1.5rem;
+  background: $card-bg;
+  border: 1px solid $card-border-color;
+  border-radius: $border-radius;
+  padding: 1rem 1.15rem;
+  margin-bottom: 0.75rem;
+  transition: border-color 200ms ease;
+
+  &:hover { border-color: rgba(107, 158, 120, 0.22); }
+
+  &.is-down { border-color: rgba(196, 112, 85, 0.3); }
+
+  .pr-main {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .pr-title {
+    font-weight: 600;
+    color: $white;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+
+    a {
+      color: inherit;
+      text-decoration: none;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+
+      &:hover { color: $green-bright; }
+    }
+  }
+
+  .pr-url {
+    font-size: 0.73rem;
+    color: #847c72;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .pr-side {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 0.75rem;
+    min-height: 68px; // Matches the left column's natural height so actions pin to bottom
+  }
+
+  // Uniform stat grid — each cell is label-over-chip so every column aligns
+  // vertically regardless of whether the value is a pill or a number.
+  .pr-meta {
+    display: flex;
+    gap: 0.85rem;
+    align-items: flex-end;
+    font-family: $font-family-monospace;
+
+    .pr-meta-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.2rem;
+      min-width: 0;
+    }
+
+    .pr-meta-k {
+      color: #665f56;
+      text-transform: uppercase;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      line-height: 1;
+    }
+  }
+
+  .pr-actions {
+    display: flex;
+    gap: 0.4rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .property-row {
+    grid-template-columns: 1fr;
+
+    .pr-side {
+      min-height: 0;
+      align-items: stretch;
+    }
+    .pr-meta {
+      flex-wrap: wrap;
+      justify-content: flex-start;
+    }
+    .pr-actions {
+      justify-content: flex-end;
+    }
+  }
+}
+
+// ── Search form ──
+
+.search-form {
+  position: relative;
+
+  .search-icon {
+    position: absolute;
+    left: 0.9rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #665f56;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .search-input {
+    padding-left: 2.5rem;
+    font-size: 0.85rem;
+    border: 1px solid rgba(107, 158, 120, 0.15);
+    background: rgba(19, 18, 14, 0.7);
+    color: $body-color;
+    transition: border-color 200ms ease;
+
+    &::placeholder {
+      color: #665f56;
+      font-style: normal;
+    }
+
+    &:focus {
+      border-color: rgba(107, 158, 120, 0.4);
+      box-shadow: 0 0 0 2px rgba(107, 158, 120, 0.1);
+      background: #13120e;
+    }
+  }
+}
+
+// ── Dashboard toolbar ──
+// Input + button sharing one visual line — both get the same height (38px)
+// so the CTA doesn't read as a different size from the field next to it.
+
+.dashboard-toolbar {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+
+  .form-control {
+    height: 38px;
+    font-size: 0.85rem;
+  }
+
+  .btn {
+    height: 38px;
+    padding: 0 1.1rem;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+  }
+}
+
+// ── Chart panel ──
+
+.chart-panel {
+  background: $card-bg;
+  border: 1px solid $card-border-color;
+  border-radius: $border-radius;
+  padding: 1rem 1.15rem;
+
+  .chart-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+  }
+
+  .chart-panel-title {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(201, 168, 76, 0.75);
+    font-family: $font-family-monospace;
+  }
+}
+
+// ── Security list ──
+
+.check-list {
+  background: $card-bg;
+  border: 1px solid $card-border-color;
+  border-radius: $border-radius;
+  overflow: hidden;
+
+  .check-list-header {
+    background: rgba(107, 158, 120, 0.04);
+    padding: 0.6rem 1rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(201, 168, 76, 0.75);
+    font-family: $font-family-monospace;
+    border-bottom: 1px solid rgba(107, 158, 120, 0.1);
+  }
+
+  .check-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.55rem 1rem;
+    font-size: 0.85rem;
+    border-bottom: 1px solid rgba(107, 158, 120, 0.04);
+
+    &:last-child { border-bottom: none; }
+
+    .check-name {
+      color: $gray-300;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+  }
+}
+
+// ── Monitor card ──
+// When used inside a flex/grid row, `h-100` class stretches the card to its
+// cell height. The body grows to fill any extra space so the two cards next
+// to each other stay visually balanced even with different dl row counts.
+
+.monitor-card {
+  background: $card-bg;
+  border: 1px solid $card-border-color;
+  border-radius: $border-radius;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+
+  .monitor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.7rem 1rem;
+    background: rgba(107, 158, 120, 0.04);
+    border-bottom: 1px solid rgba(107, 158, 120, 0.08);
+    flex-shrink: 0;
+
+    .monitor-title {
+      font-family: $font-family-monospace;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: $white;
+    }
+  }
+
+  .monitor-body {
+    padding: 0.9rem 1rem;
+    flex: 1 1 auto;
+
+    dl {
+      margin: 0;
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      gap: 0.4rem 1rem;
+    }
+
+    dt {
+      font-size: 0.7rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #665f56;
+      font-weight: 500;
+    }
+
+    dd {
+      margin: 0;
+      font-size: 0.8rem;
+      color: $gray-200;
+      font-family: $font-family-monospace;
+    }
+  }
+}
+
+// ── Insight row (lighthouse opportunities / crawler issues) ──
+
+.insight-header {
+  display: grid;
+  grid-template-columns: 110px 1fr 1fr 140px;
+  gap: 1rem;
+  padding: 0.55rem 1rem;
+  background: rgba(107, 158, 120, 0.04);
+  border: 1px solid rgba(107, 158, 120, 0.08);
+  border-radius: $border-radius;
+  font-family: $font-family-monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(201, 168, 76, 0.75);
+  margin-bottom: 0.6rem;
+}
+
+.insight-row {
+  display: grid;
+  grid-template-columns: 110px 1fr 1fr 140px;
+  gap: 1rem;
+  padding: 0.65rem 1rem;
+  background: $card-bg;
+  border: 1px solid $card-border-color;
+  border-radius: $border-radius;
+  margin-bottom: 0.4rem;
+  font-size: 0.85rem;
+  align-items: center;
+
+  &:hover { border-color: rgba(107, 158, 120, 0.2); }
+
+  .insight-col-trunc {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 767px) {
+  .insight-header { display: none; }
+  .insight-row {
+    grid-template-columns: 1fr;
+    gap: 0.4rem;
+  }
+}
+
+// ── Auth split view ──
+
+.auth-shell {
+  min-height: calc(100vh - 52px);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  @media (max-width: 991px) {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-form-col {
+    padding: 3rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .auth-visual-col {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(145deg, #090806 0%, #0e0d0a 60%, #13120e 100%);
+    border-left: 1px solid rgba(107, 158, 120, 0.08);
+
+    @media (max-width: 991px) { display: none; }
+  }
+
+  .auth-form-wrap {
+    width: 100%;
+    max-width: 380px;
+  }
 }

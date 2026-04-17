@@ -16,87 +16,145 @@
 
 
 {% block main %}
-<div class="bg-dark mb-5 home-hero d-flex align-items-center" style="--background-image: url({% static 'images/home-hero.webp' %});">
+<section class="hero">
   <div class="container">
     <div class="row">
-      <div class="col-12 col-lg-10 col-xl-8">
-        <div class="fs-4 text-light">
-          <span class="badge bg-warning text-black">Alpha</span> Things are rapidly changing!
+      <div class="col-12 col-lg-7">
+        <span class="hero-eyebrow">
+          <span class="eyebrow-dot" aria-hidden="true"></span>
+          v0.9 · alpha · self-hosted
+        </span>
+        <h1 class="hero-title">
+          Website status monitoring for operators who host their <span class="accent">own stack</span>.
+        </h1>
+        <p class="hero-sub">
+          HTTP checks every three minutes. Lighthouse audits. Security header analysis.
+          Full-site SEO crawl. Discord + email alerts on state transitions. Your data
+          never leaves your infrastructure.
+        </p>
+        <div class="hero-ctas">
+          <a href="/accounts/login/" class="btn btn-primary">Access dashboard →</a>
+          <a href="https://github.com/overshard/status" target="_blank" class="btn btn-outline-light">View source</a>
         </div>
-        <h1 class="display-1 mt-4 text-light fw-bolder">Self-hosted website status monitoring</h1>
-        <p class="mb-0 text-white mt-4 fs-4">Made by <a href="https://isaacbythewood.com/" class="text-white">Isaac Bythewood</a>,
-          a simple opinionated self-hosted website status monitoring solution.</p>
-        <div class="mt-4">
-          <a href="/accounts/login/" class="btn btn-light btn-lg me-3">
-            Login
-          </a>
-          <a href="https://github.com/overshard/status" target="_blank" class="btn btn-outline-light btn-lg">
-            Source code
-          </a>
+      </div>
+      <div class="col-12 col-lg-5 mt-5 mt-lg-0 d-flex align-items-center">
+        <div class="terminal-block w-100">
+          <span class="t-line"><span class="t-comment"># probe cycle</span></span>
+          <span class="t-line"><span class="t-prompt">probe$</span><span class="t-out">GET https://bythewood.me</span></span>
+          <span class="t-line"><span class="t-key">status</span>=<span class="t-val">200 OK</span> <span class="t-key">rtt</span>=<span class="t-val">142ms</span></span>
+          <span class="t-line"><span class="t-key">cert</span>=<span class="t-val">valid · 87d</span></span>
+          <span class="t-line"><span class="t-prompt">probe$</span> <span class="t-cursor"></span></span>
         </div>
       </div>
     </div>
   </div>
-</div>
-<div class="container mb-2">
-  <div class="row justify-content-center">
-    <div class="col-12 col-md-6 col-lg-4">
-      <div class="card bg-primary text-white text-center mb-3">
-        <div class="card-body">
-          <div class="display-5">{{ total_properties }}</div>
-          <div class="h5">Total properties</div>
+</section>
+
+<section class="stat-strip">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-6 col-md-3">
+        <div class="stat">
+          <div class="stat-label">properties</div>
+          <div class="stat-value">{{ total_properties }}</div>
         </div>
       </div>
-    </div>
-    <div class="col-12 col-md-6 col-lg-4">
-      <div class="card bg-primary text-white text-center mb-3">
-        <div class="card-body">
-          <div class="display-5">{{ total_statuses }}</div>
-          <div class="h5">Total events</div>
+      <div class="col-6 col-md-3">
+        <div class="stat">
+          <div class="stat-label">checks logged</div>
+          <div class="stat-value">{{ total_statuses }}</div>
         </div>
       </div>
-    </div>
-    <div class="col-12 col-md-6 col-lg-4">
-      <div class="card bg-primary text-white text-center mb-3">
-        <div class="card-body">
-          <div class="display-5">{{ first_status_created_at|date:"M j, Y" }}</div>
-          <div class="h5">First event logged</div>
+      <div class="col-6 col-md-3">
+        <div class="stat">
+          <div class="stat-label">operators</div>
+          <div class="stat-value">{{ total_users }}</div>
         </div>
       </div>
-    </div>
-  </div>
-</div>
-<div class="container">
-  <div class="row justify-content-center">
-    <div class="col-12 col-md-6 col-lg-4 mb-4">
-      <div class="card bg-light h-100">
-        <div class="card-body">
-          <h2 class="card-title h5">Open source</h2>
-          <p class="card-text">The source code is available on GitHub and is
-            published under the simplified BSD license, do what you want with
-            it.</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-12 col-md-6 col-lg-4 mb-4">
-      <div class="card bg-light h-100">
-        <div class="card-body">
-          <h2 class="card-title h5">Privacy friendly</h2>
-          <p class="card-text">The status data is stored on whatever
-            hosting service you put it on. You can store as much, or as
-            little, data as you want.</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-12 col-md-6 col-lg-4 mb-4">
-      <div class="card bg-light h-100">
-        <div class="card-body">
-          <h2 class="card-title h5">First class mobile support</h2>
-          <p class="card-text">A responsive design that should work across all
-            platforms.</p>
+      <div class="col-6 col-md-3">
+        <div class="stat">
+          <div class="stat-label">online since</div>
+          <div class="stat-value" style="font-size: 1.05rem;">
+            {% if first_status_created_at %}{{ first_status_created_at|date:"M j, Y" }}{% else %}—{% endif %}
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
+</section>
+
+<section class="container my-5 py-4">
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="section-label mb-2">capabilities</div>
+      <h2 class="h3 text-white fw-bolder" style="letter-spacing: -0.01em;">
+        Everything your infrastructure team needs in one dashboard.
+      </h2>
+    </div>
+  </div>
+  <div class="row g-4">
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="feature">
+        <div class="feature-label">uptime</div>
+        <div class="feature-title">Live HTTP probes</div>
+        <p class="feature-desc">
+          Three-minute intervals, two-strike alert debouncing, SSL and timeout
+          mapping. Discord + SMTP notifications only fire on real state
+          transitions.
+        </p>
+      </div>
+    </div>
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="feature">
+        <div class="feature-label">performance</div>
+        <div class="feature-title">Lighthouse audits</div>
+        <p class="feature-desc">
+          Daily headless runs surface performance, accessibility, best practices,
+          and SEO scores with weighted metric breakdowns and opportunity savings.
+        </p>
+      </div>
+    </div>
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="feature">
+        <div class="feature-label">security</div>
+        <div class="feature-title">Header analysis</div>
+        <p class="feature-desc">
+          HTTPS, HSTS, HSTS preload, XSS and content-sniffing protection,
+          clickjack defence, and server-version leak checks — graded on every
+          probe.
+        </p>
+      </div>
+    </div>
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="feature">
+        <div class="feature-label">crawler</div>
+        <div class="feature-title">Weekly SEO spider</div>
+        <p class="feature-desc">
+          Extracts title, description, canonical, OG tags, and H1 per page — every
+          mismatch becomes a severity-ranked insight you can drill into.
+        </p>
+      </div>
+    </div>
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="feature">
+        <div class="feature-label">sharing</div>
+        <div class="feature-title">Public status pages</div>
+        <p class="feature-desc">
+          Toggle a property public and share the URL — no account required,
+          customers see live status, response graphs, and uptime at a glance.
+        </p>
+      </div>
+    </div>
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="feature">
+        <div class="feature-label">ownership</div>
+        <div class="feature-title">BSD, single container</div>
+        <p class="feature-desc">
+          Django + SQLite + a scheduler. Ships as a Docker Compose stack. Your
+          data, your ingress, your retention policy. No SaaS vendor lock-in.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
 {% endblock %}
