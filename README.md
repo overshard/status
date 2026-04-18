@@ -1,24 +1,28 @@
 # Status
 
-A self-hostable status service with a straightforward API to collect events
-from any source.
+A self-hostable uptime monitor and status page. HTTP checks every 3 minutes,
+daily Lighthouse audits, weekly in-process SEO crawls, and alerts via email
+and Discord webhook on state transitions.
 
 
 ## Motivation
 
-I was bored and felt like writing my own status service over the weekend.
+I was bored and felt like writing my own uptime service over the weekend.
 
 
 ## Features
 
-- Standard website status collection
-- Custom metrics collection
-- UTM query collection
-- Optional anonymized location collection
-- Customizable UI
-- Date range selection and comparison
-- Public URL sharing
-- Customizable
+- HTTP uptime checks with rolling uptime percentages and recent-uptime bars
+- Lighthouse audits (performance, accessibility, best practices, SEO) with
+  weighted breakdown and top savings opportunities
+- In-process SEO crawler (requests + BeautifulSoup) — title, description,
+  canonical, OG tags, and H1 per page
+- Security header analysis (HSTS, CSP, X-Frame-Options, Referrer-Policy, etc.)
+- Alert state machine with debounce on flaps — two consecutive non-200s to
+  go down, immediate 200 to come back up
+- Email and Discord webhook alerts on state transitions only
+- PDF report export per property via a headless Chromium subprocess
+- Customizable UI with a warm-earth palette and Monaspace Argon
 
 
 ## Requirements
@@ -32,9 +36,10 @@ dependencies:
 
 - python
 - uv
-- node
-- yarn
-- chromium
+- bun
+- node (required only for the `lighthouse` npm CLI — Bun doesn't run Lighthouse
+  correctly; see bun issue #4958)
+- chromium (used for PDF report generation via a subprocess wrapper)
 
 You can also check the `Dockerfile` for an exact list of dependencies and adjust
 package names for your desired platform.
@@ -58,10 +63,10 @@ If you want to also run the scheduler you'll have to do so separately. Run
 
 ## Checking outdated dependencies
 
-This can be done in both yarn and uv with the following two commands:
+This can be done in both bun and uv with the following two commands:
 
     uv lock --upgrade --dry-run
-    yarn outdated
+    bun outdated
 
 You can then upgrade all dependencies at once with:
 
@@ -92,31 +97,16 @@ variables.
 
 ## Default user
 
-The default user is `admin` with the password `admin`. We also create an example
-property so you can see how the status look and a property to collect metrics
-from ourselves.
+The default user is `admin` with the password `admin`. Add your own properties
+from the dashboard after signing in.
 
 
-## User location data
+## Alerts
 
-I'm unsure how I want to handle user location data at the moment. I'm not really
-interested in someone's personal location but I do like to know where people
-are coming from region wise. This helps me know if I need to add translations
-to my projects or if I need to add maybe a CDN/caching/server to a new region.
-
-For that reason I've added a simple way to enable or disable location data. I
-don't want to store user IPs so location data isn't retroactive but if you add
-a new environmental variable for an [ipinfo.io](https://ipinfo.io/) API token
-we start logging location data based on IP then throw out the IP and only keep
-the data.
-
-This platform could easily be replaced with any platform you like, if you search
-the codebase for "ipinfo" you can find and replace as needed. Also, if you strip
-out all location collecting information this project still runs just fine.
-
-What to add to your `.env` file:
-
-    IPINFO_TOKEN=<your ipinfo.io token>
+Each property can be assigned a Discord webhook URL per user (see the account
+settings). Email alerts use the project's configured outbound mailer (the
+direct-to-MX backend by default, see `status/mailer.py`). Alerts fire on state
+transitions only — not on every failing check.
 
 
 ## Backups

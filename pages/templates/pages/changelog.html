@@ -36,6 +36,17 @@
     <div class="col-lg-8 offset-lg-2">
 
       <div class="changelog-entry">
+        <div class="changelog-date">2026-04-18</div>
+        <ul>
+          <li>Centralize SQLite settings and expand PRAGMA tuning (WAL, synchronous, cache, mmap, temp_store)</li>
+          <li>Commit alert state before firing notifications so a crash mid-alert can't cause duplicate sends</li>
+          <li>Harden the chromium wrapper with timeouts, <code>/tmp</code> temp files, and <code>--headless=new</code></li>
+          <li>Redesign alert emails to match the warm-earth site palette</li>
+          <li>Stop wedge-reset from failing a healthy queued backlog of checks</li>
+        </ul>
+      </div>
+
+      <div class="changelog-entry">
         <div class="changelog-date">2026-04-17</div>
         <ul>
           <li>Redesign the whole dashboard with a warm-earth palette — mossy forest green and amber on deep charcoal, Monaspace Argon throughout</li>
@@ -45,6 +56,10 @@
           <li>Swap the 🚀 favicon for a themed SVG tile matching the in-app logo</li>
           <li>Update the chromium wrapper to also pick up <code>google-chrome</code> so the webdev container runs locally without extra setup</li>
           <li>Fix logout 405 by switching to a POST form + CSRF (Django 5 <code>LogoutView</code> is POST-only)</li>
+          <li>Refactor the scheduler with thread pools and graceful shutdown</li>
+          <li>Collapse the web and scheduler services into a single container via a Python supervisor in <code>entrypoint.py</code></li>
+          <li>Replace the Exim relay with a Python direct-to-MX email backend</li>
+          <li>Set <code>PYTHONUNBUFFERED</code> so scheduler output reaches <code>docker logs</code></li>
         </ul>
       </div>
 
