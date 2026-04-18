@@ -1,15 +1,1 @@
-{% extends "emails/property_email_base.html" %}
-
-{% block header_class %}bg-success text-white{% endblock %}
-
-{% block header_style %}background-color: #28a745; color: #ffffff;{% endblock %}
-
-{% block header_title %}Property recovered{% endblock %}
-
-{% block alert_class %}alert-success{% endblock %}
-
-{% block alert_style %}color: #1e4d20;{% endblock %}
-
-{% block alert_bg %}#e6ffed{% endblock %}
-
-{% block alert_message %}Good news! Your property is back online and responding normally.{% endblock %}
+{% include "emails/property_email_base.html" with email_title="Property recovered" preheader=property.name|add:" is back online" status_label="Recovered" event_title="Your property is back online." event_copy="The latest check returned a healthy response. Everything looks normal again — we'll keep monitoring and alert you if anything changes." accent="#6b9e78" accent_bright="#7db88c" accent_tint="#191e17" accent_border="#222d22" %}
