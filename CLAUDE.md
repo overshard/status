@@ -73,4 +73,4 @@ Split settings: `status/settings/__init__.py` (shared), `development.py`, `produ
 
 ### Production
 
-Docker Compose runs three services: `web` (Gunicorn+Uvicorn), `worker` (scheduler), `email` (Exim relay). Deploys via `git push server master` triggering a post-receive hook.
+Docker Compose runs a single `web` service. `entrypoint.py` spawns Gunicorn (Uvicorn workers) and the `scheduler` management command side-by-side in that container — if either process exits, the container stops and Docker restarts it. Deploys via `git push server master` triggering a post-receive hook.
