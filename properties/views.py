@@ -260,7 +260,8 @@ def property_recrawl(request, property_id):
         )
 
     property_obj.next_run_at_crawler = timezone.now()
-    property_obj.save(update_fields=["next_run_at_crawler"])
+    property_obj.last_crawl_error = None
+    property_obj.save(update_fields=["next_run_at_crawler", "last_crawl_error"])
     return JsonResponse({"ok": True, **_serialize_status(property_obj)})
 
 
@@ -286,7 +287,10 @@ def property_rerun_lighthouse(request, property_id):
         )
 
     property_obj.next_lighthouse_run_at = timezone.now()
-    property_obj.save(update_fields=["next_lighthouse_run_at"])
+    property_obj.last_lighthouse_error = None
+    property_obj.save(
+        update_fields=["next_lighthouse_run_at", "last_lighthouse_error"]
+    )
     return JsonResponse({"ok": True, **_serialize_status(property_obj)})
 
 

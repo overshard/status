@@ -72,30 +72,31 @@ class Command(BaseCommand):
         self._stop.set()
 
     def reset_wedged_states(self):
-        """Flip stale running/queued states back to idle.
+        """Flip running rows back to idle once they've overrun their deadline.
 
-        Runs every cycle to catch threads that overran their deadline.
-        The startup path in handle() also wipes state unconditionally to
-        cover crashes.
+        Only "running" rows count as wedged. "queued" rows are waiting their
+        turn in the thread pool and will be picked up when a worker frees up;
+        flipping them here would mark healthy backlog as failed whenever the
+        user fans out manual re-triggers.
+
+        The startup path in handle() also wipes any leftover queued/running
+        state unconditionally to cover crashes.
         """
         now = timezone.now()
         crawl_cutoff = now - timezone.timedelta(seconds=900)
         lh_cutoff = now - timezone.timedelta(seconds=300)
 
         Property.objects.filter(
-            crawl_state__in=["queued", "running"],
-        ).filter(
-            Q(crawl_started_at__isnull=True) | Q(crawl_started_at__lt=crawl_cutoff)
+            crawl_state="running",
+            crawl_started_at__lt=crawl_cutoff,
         ).update(
             crawl_state="idle",
             last_crawl_error="Crawl timed out or was interrupted",
         )
 
         Property.objects.filter(
-            lighthouse_state__in=["queued", "running"],
-        ).filter(
-            Q(lighthouse_started_at__isnull=True)
-            | Q(lighthouse_started_at__lt=lh_cutoff)
+            lighthouse_state="running",
+            lighthouse_started_at__lt=lh_cutoff,
         ).update(
             lighthouse_state="idle",
             last_lighthouse_error="Lighthouse run timed out or was interrupted",
