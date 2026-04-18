@@ -44,22 +44,7 @@ SESSION_COOKIE_SECURE = True
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": "/data/db/db.sqlite3",
-        "OPTIONS": {
-            # WAL lets readers run concurrently with a writer; the scheduler
-            # has several worker threads, so the default rollback journal
-            # yields frequent "database is locked" errors. A 30s busy timeout
-            # gives contending writers a chance to serialize rather than
-            # fail, which previously stranded alert state mid-transition.
-            "timeout": 30,
-            "init_command": "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;",
-            "transaction_mode": "IMMEDIATE",
-        },
-    }
-}
+DATABASES["default"]["NAME"] = "/data/db/db.sqlite3"
 
 
 # Email

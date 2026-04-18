@@ -98,6 +98,35 @@ MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / "media"
 
 
+# Database
+# https://docs.djangoproject.com/en/4.0/ref/settings/#databases
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+        'OPTIONS': {
+            # WAL lets readers run concurrently with a writer; the scheduler
+            # has several worker threads, so the default rollback journal
+            # yields frequent "database is locked" errors. A 30s busy timeout
+            # gives contending writers a chance to serialize rather than
+            # fail, which previously stranded alert state mid-transition.
+            'timeout': 30,
+            'transaction_mode': 'IMMEDIATE',
+            'init_command': (
+                'PRAGMA journal_mode=WAL;'
+                'PRAGMA synchronous=NORMAL;'
+                'PRAGMA foreign_keys=ON;'
+                'PRAGMA temp_store=MEMORY;'
+                'PRAGMA mmap_size=134217728;'
+                'PRAGMA journal_size_limit=67108864;'
+                'PRAGMA cache_size=-20000;'
+            ),
+        },
+    }
+}
+
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
