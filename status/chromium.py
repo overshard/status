@@ -1,124 +1,176 @@
 """
-A simple library for working with the chromium browser in headless mode for
-generating things like screenshots.
+Headless Chromium wrapper for generating screenshots and PDFs from URLs or HTML.
+
+Shells out to the system chromium binary (no Playwright, no Selenium, no bundled
+browser). Works on Alpine, Ubuntu, and macOS as long as a chromium-family binary
+is discoverable on PATH.
 """
+from __future__ import annotations
+
 import os
 import shutil
 import subprocess
-import uuid
+import tempfile
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Iterator, Optional, Tuple
 
+from django.core.files import File
 from django.core.files.storage import default_storage
 
+DEFAULT_VIEWPORT: Tuple[int, int] = (1280, 720)
+DEFAULT_VIRTUAL_TIME_BUDGET_MS = 5_000
+DEFAULT_SUBPROCESS_TIMEOUT_S = 60
 
-# Chromium/Chrome binary discovery — distro names vary (Alpine: chromium,
-# Debian/Ubuntu: chromium-browser, the webdev container ships google-chrome).
-chromium = None
-for binary in ("chromium", "chromium-browser", "google-chrome"):
-    if shutil.which(binary):
-        chromium = binary
-        break
-
-
-base_command = [
-    chromium,
-    "--headless",
+BASE_FLAGS = (
+    "--headless=new",
     "--no-sandbox",
-    "--use-gl=swiftshader",
+    "--no-zygote",
     "--disable-gpu",
-    "--disable-software-rasterizer",
     "--disable-dev-shm-usage",
-    "--disable-crash-reporter",
+    "--disable-software-rasterizer",
     "--disable-extensions",
-    "--disable-in-process-stack-traces",
+    "--disable-background-networking",
+    "--disable-crash-reporter",
     "--disable-logging",
-    "--window-size=1280,720",
     "--hide-scrollbars",
-] if chromium else []
+)
 
 
-def save_tempfile_to_storage(tempfilename, filename):
-    """
-    Saves the given tempfile to django default_storage.
+def _find_chromium() -> Optional[str]:
+    for binary in ("chromium", "chromium-browser", "google-chrome"):
+        path = shutil.which(binary)
+        if path:
+            return path
+    return None
 
-    :param tempfilename: The tempfile we want to save
-    :param filename: The storage location to save the file to
-    """
+
+CHROMIUM_BINARY = _find_chromium()
+
+
+class ChromiumError(RuntimeError):
+    pass
+
+
+@contextmanager
+def _tempfile(suffix: str) -> Iterator[Path]:
+    fd, raw = tempfile.mkstemp(suffix=suffix, dir="/tmp")
+    os.close(fd)
+    path = Path(raw)
+    try:
+        yield path
+    finally:
+        path.unlink(missing_ok=True)
+
+
+@contextmanager
+def _html_tempfile(html: str) -> Iterator[str]:
+    fd, raw = tempfile.mkstemp(suffix=".html", dir="/tmp")
+    path = Path(raw)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fp:
+            fp.write(html)
+        yield f"file://{path}"
+    finally:
+        path.unlink(missing_ok=True)
+
+
+def _run(args: list[str], timeout: int) -> None:
+    if not CHROMIUM_BINARY:
+        raise ChromiumError(
+            "No chromium binary found on PATH (tried: chromium, "
+            "chromium-browser, google-chrome)"
+        )
+    cmd = [CHROMIUM_BINARY, *BASE_FLAGS, *args]
+    try:
+        subprocess.run(cmd, check=True, capture_output=True, timeout=timeout)
+    except subprocess.TimeoutExpired as exc:
+        raise ChromiumError(f"chromium timed out after {timeout}s") from exc
+    except subprocess.CalledProcessError as exc:
+        stderr = (exc.stderr or b"").decode("utf-8", errors="replace").strip()
+        raise ChromiumError(
+            f"chromium exited {exc.returncode}: {stderr or '(no stderr)'}"
+        ) from exc
+
+
+def _save(source: Path, filename: str) -> str:
     if default_storage.exists(filename):
         default_storage.delete(filename)
-    default_storage.save(filename, open(tempfilename, "rb"))
-    os.remove(tempfilename)
-
-
-def run_chromium_command(command):
-    """
-    Runs the given chromium command and returns the stdout.
-
-    :param command: The command to run
-    """
-    if not chromium:
-        raise Exception("Could not find chromium")
-    command = command.split()
-    command = base_command + command
-    subprocess.run(
-        command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-    )
-
-
-def generate_screenshot_from_url(url, filename):
-    """
-    Generates a screenshot of the given url and saves it to the given output
-    file.
-
-    :param url: The url to screenshot
-    :param filename: The output file to save the screenshot to
-    """
-    tempfilename = f"{uuid.uuid4()}.png"
-    run_chromium_command(f"--screenshot={tempfilename} {url}")
-    save_tempfile_to_storage(tempfilename, filename)
+    with source.open("rb") as fp:
+        default_storage.save(filename, File(fp))
     return default_storage.url(filename)
 
 
-def generate_screenshot_from_html(html, filename):
-    """
-    Generates a screenshot of the given html and saves it to the given output
-    file.
-
-    :param html: The html to screenshot
-    :param filename: The output file to save the screenshot to
-    """
-    tempfilename = f"{uuid.uuid4()}.html"
-    with open(tempfilename, "w") as f:
-        f.write(html)
-    tempfilename_path = "file://" + os.path.join(os.getcwd(), tempfilename)
-    run_chromium_command(f"--screenshot={tempfilename} {tempfilename_path}")
-    save_tempfile_to_storage(tempfilename, filename)
-    return default_storage.url(filename)
-
-
-def generate_pdf_from_url(url, filename):
-    """
-    Generates a pdf of the given url and saves it to the given output file.
-
-    :param url: The url to screenshot
-    :param filename: The output file to save the screenshot to
-    """
-    tempfilename = f"{uuid.uuid4()}.pdf"
-    run_chromium_command(f"--print-to-pdf-no-header --print-to-pdf={tempfilename} {url}")
-    save_tempfile_to_storage(tempfilename, filename)
-    return default_storage.url(filename)
+def generate_screenshot_from_url(
+    url: str,
+    filename: str,
+    *,
+    viewport: Tuple[int, int] = DEFAULT_VIEWPORT,
+    virtual_time_budget_ms: int = DEFAULT_VIRTUAL_TIME_BUDGET_MS,
+    timeout: int = DEFAULT_SUBPROCESS_TIMEOUT_S,
+) -> str:
+    with _tempfile(".png") as out:
+        _run(
+            [
+                f"--screenshot={out}",
+                f"--window-size={viewport[0]},{viewport[1]}",
+                f"--virtual-time-budget={virtual_time_budget_ms}",
+                url,
+            ],
+            timeout,
+        )
+        return _save(out, filename)
 
 
-def generate_pdf_from_html(html, filename):
-    """
-    Generates a pdf of the given html and saves it to the given output file.
+def generate_screenshot_from_html(
+    html: str,
+    filename: str,
+    *,
+    viewport: Tuple[int, int] = DEFAULT_VIEWPORT,
+    virtual_time_budget_ms: int = DEFAULT_VIRTUAL_TIME_BUDGET_MS,
+    timeout: int = DEFAULT_SUBPROCESS_TIMEOUT_S,
+) -> str:
+    with _html_tempfile(html) as url:
+        return generate_screenshot_from_url(
+            url,
+            filename,
+            viewport=viewport,
+            virtual_time_budget_ms=virtual_time_budget_ms,
+            timeout=timeout,
+        )
 
-    :param url: The url to screenshot
-    :param filename: The output file to save the screenshot to
-    """
-    tempfilename = f"{uuid.uuid4()}.html"
-    with open(tempfilename, "w") as f:
-        f.write(html)
-    tempfilename_path = "file://" + os.path.join(os.getcwd(), tempfilename)
-    run_chromium_command(f"--print-to-pdf-no-header --print-to-pdf={tempfilename} {tempfilename_path}")
-    save_tempfile_to_storage(tempfilename, filename)
-    return default_storage.url(filename)
+
+def generate_pdf_from_url(
+    url: str,
+    filename: str,
+    *,
+    virtual_time_budget_ms: int = DEFAULT_VIRTUAL_TIME_BUDGET_MS,
+    timeout: int = DEFAULT_SUBPROCESS_TIMEOUT_S,
+) -> str:
+    with _tempfile(".pdf") as out:
+        _run(
+            [
+                f"--print-to-pdf={out}",
+                "--no-pdf-header-footer",
+                f"--virtual-time-budget={virtual_time_budget_ms}",
+                url,
+            ],
+            timeout,
+        )
+        return _save(out, filename)
+
+
+def generate_pdf_from_html(
+    html: str,
+    filename: str,
+    *,
+    virtual_time_budget_ms: int = DEFAULT_VIRTUAL_TIME_BUDGET_MS,
+    timeout: int = DEFAULT_SUBPROCESS_TIMEOUT_S,
+) -> str:
+    with _html_tempfile(html) as url:
+        return generate_pdf_from_url(
+            url,
+            filename,
+            virtual_time_budget_ms=virtual_time_budget_ms,
+            timeout=timeout,
+        )
