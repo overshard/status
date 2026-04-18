@@ -4,6 +4,7 @@ import time
 import uuid
 
 import requests
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.mail import EmailMessage
 from django.db import models, transaction
@@ -112,7 +113,8 @@ class AlertsMixin:
 
     def send_down_email(self):
         subject = f"Status: {self.name} is down!"
-        message = render_to_string("emails/property_down.html", {"property": self})
+        context = {"property": self, "BASE_URL": settings.BASE_URL}
+        message = render_to_string("emails/property_down.html", context)
         from_email = "noreply@bythewood.me"
         to_emails = [self.user.email]
         email = EmailMessage(subject, message, from_email, to_emails)
@@ -124,7 +126,8 @@ class AlertsMixin:
 
     def send_recovery_email(self):
         subject = f"Status: {self.name} is back up!"
-        message = render_to_string("emails/property_recovery.html", {"property": self})
+        context = {"property": self, "BASE_URL": settings.BASE_URL}
+        message = render_to_string("emails/property_recovery.html", context)
         from_email = "noreply@bythewood.me"
         to_emails = [self.user.email]
         email = EmailMessage(subject, message, from_email, to_emails)

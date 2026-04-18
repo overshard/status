@@ -1,15 +1,1 @@
-{% extends "emails/property_email_base.html" %}
-
-{% block header_class %}bg-danger text-white{% endblock %}
-
-{% block header_style %}background-color: #dc3545; color: #ffffff;{% endblock %}
-
-{% block header_title %}Property down{% endblock %}
-
-{% block alert_class %}alert-danger{% endblock %}
-
-{% block alert_style %}color: #66121a;{% endblock %}
-
-{% block alert_bg %}#fae3e5{% endblock %}
-
-{% block alert_message %}One of your properties just went down!{% endblock %}
+{% include "emails/property_email_base.html" with email_title="Property down" preheader=property.name|add:" is not responding" status_label="Down" event_title="Your property is down." event_copy="We've observed two consecutive failed checks in a row. Monitoring will continue in the background and you'll get another note the moment it recovers." accent="#c47055" accent_bright="#e38871" accent_tint="#201712" accent_border="#36231b" %}
