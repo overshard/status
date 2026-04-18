@@ -182,34 +182,40 @@ class AlertsMixin:
         """
         is_currently_up = current_status_code == 200
 
-        # Lock the property row so concurrent checks can't both observe the
-        # same alert_state and double-fire transitions.
+        # Commit the state transition inside the atomic block BEFORE firing
+        # notifications. If the save raises (e.g. SQLite "database is locked"
+        # from a concurrent writer), the transaction rolls back and nothing
+        # is emailed — the next check will retry from the same state. Sending
+        # first would mean a failed save leaves us firing the same alert on
+        # every subsequent check.
+        transition = None
         with transaction.atomic():
             locked = Property.objects.select_for_update().get(pk=self.pk)
 
             if is_currently_up and locked.alert_state == "down":
-                self.send_recovery_email()
-                self.send_recovery_discord_message()
-                locked.alert_state = "up"
-                locked.last_alert_sent = timezone.now()
-                locked.save(update_fields=["alert_state", "last_alert_sent"])
-                self.alert_state = locked.alert_state
-                self.last_alert_sent = locked.last_alert_sent
+                transition = "recovery"
             elif not is_currently_up and locked.alert_state == "up":
-                # Require at least 2 consecutive failures to avoid false positives.
                 checks = self.statuses.order_by("-created_at")[:2]
                 if (
                     len(checks) >= 2
                     and checks[0].status_code != 200
                     and checks[1].status_code != 200
                 ):
-                    self.send_down_email()
-                    self.send_down_discord_message()
-                    locked.alert_state = "down"
-                    locked.last_alert_sent = timezone.now()
-                    locked.save(update_fields=["alert_state", "last_alert_sent"])
-                    self.alert_state = locked.alert_state
-                    self.last_alert_sent = locked.last_alert_sent
+                    transition = "down"
+
+            if transition is not None:
+                locked.alert_state = "up" if transition == "recovery" else "down"
+                locked.last_alert_sent = timezone.now()
+                locked.save(update_fields=["alert_state", "last_alert_sent"])
+                self.alert_state = locked.alert_state
+                self.last_alert_sent = locked.last_alert_sent
+
+        if transition == "recovery":
+            self.send_recovery_email()
+            self.send_recovery_discord_message()
+        elif transition == "down":
+            self.send_down_email()
+            self.send_down_discord_message()
 
 
 class CrawlerMixin:
