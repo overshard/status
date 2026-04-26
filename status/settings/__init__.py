@@ -113,12 +113,16 @@ DATABASES = {
             # fail, which previously stranded alert state mid-transition.
             'timeout': 30,
             'transaction_mode': 'IMMEDIATE',
+            # mmap_size is intentionally omitted: gunicorn workers and the
+            # scheduler each open their own connection, and SQLite's mmap is
+            # documented as unsafe for multi-process writers — it amplified
+            # an unrelated WAL inconsistency into full database corruption
+            # on 2026-04-19.
             'init_command': (
                 'PRAGMA journal_mode=WAL;'
                 'PRAGMA synchronous=NORMAL;'
                 'PRAGMA foreign_keys=ON;'
                 'PRAGMA temp_store=MEMORY;'
-                'PRAGMA mmap_size=134217728;'
                 'PRAGMA journal_size_limit=67108864;'
                 'PRAGMA cache_size=-20000;'
             ),
