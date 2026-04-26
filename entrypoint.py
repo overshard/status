@@ -11,7 +11,7 @@ procs = [
             "gunicorn",
             "status.asgi:application",
             "--workers",
-            "2",
+            "1",
             "--max-requests",
             "256",
             "--timeout",
