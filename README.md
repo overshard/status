@@ -1,5 +1,12 @@
 # Status
 
+> **Archived and no longer maintained.**
+> This is the Django implementation, renamed from `status` to `status-django` and kept as a
+> read-only snapshot. It receives no further updates, fixes, or security patches.
+> The Rust implementation that replaced it lives in `status-rust`, also archived.
+> Use this as a reference, not as running software.
+
+
 A self-hostable uptime monitor and status page. HTTP checks every 3 minutes,
 daily Lighthouse audits, weekly in-process SEO crawls, and alerts via email
 and Discord webhook on state transitions.
