@@ -1,11 +1,6 @@
+> **Archived.** This project is no longer in use and no longer maintained.
+
 # Status
-
-> **Archived and no longer maintained.**
-> This is the Django implementation, renamed from `status` to `status-django` and kept as a
-> read-only snapshot. It receives no further updates, fixes, or security patches.
-> The Rust implementation that replaced it lives in `status-rust`, also archived.
-> Use this as a reference, not as running software.
-
 
 A self-hostable uptime monitor and status page. HTTP checks every 3 minutes,
 daily Lighthouse audits, weekly in-process SEO crawls, and alerts via email
@@ -157,7 +152,7 @@ Server:
 
 Local:
 
-    git clone git@github.com:overshard/status.git && cd status
+    git clone git@github.com:overshard/status-django.git && cd status-django
     git remote remove origin && git remote add origin root@status.bythewood.me:/srv/git/status.git
     git push --set-upstream origin master
 
